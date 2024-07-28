@@ -1,12 +1,14 @@
 @test module;
-import ^^.main.{my_name, set_name};
+import ^^.main.{create_token, get_all_tokens};
 
-function test_add_name() {
-    assert_equals(my_name.name, "World");
 
-    val tx = rell.test.tx(set_name("Bob"));
-    assert_equals(my_name.name, "World");
+function test_add_token() {
+    //assert_equals(my_name.name, "World");
+
+    val tx = rell.test.tx(create_token("bonds", "BND"));
+    //assert_equals(my_name.name, "World");
 
     tx.run();
-    assert_equals(my_name.name, "Bob");
+    val tokens = get_all_tokens();
+    assert_equals(tokens.size(), 1);
 }

@@ -16,8 +16,8 @@ entity town {
 }
 
 entity token {
-    key ticker: name;
-    name;
+    key ticker: name = "BNF";
+    name = "Bonds";
 }
 
 entity bond {

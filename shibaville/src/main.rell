@@ -1,11 +1,16 @@
 module;
+import e: app.entities;
 
-object my_name {
-  mutable name= "World";
- }
 
-operation set_name(name) {
-  my_name.name = name;
+
+operation create_token(name, ticker:name) {
+  val token = create e.token(name, ticker);
 }
 
-query hello_world() = "Hello %s!".format(my_name.name);
+
+query get_all_tokens() {
+    val tokens = e.token @* {}(.ticker, .name);
+    return tokens;
+}
+
+

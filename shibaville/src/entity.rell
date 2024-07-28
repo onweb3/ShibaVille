@@ -1,0 +1,41 @@
+module;
+
+entity country {
+  key id: integer;
+  key name;
+  creator: byte_array;
+  tax_rate: decimal  = 0.1; // 10% tax rate
+}
+
+entity town {
+    key id: integer;
+    key name;
+    owner: byte_array; // change to account later
+    banner: text;
+    created_at: timestamp;
+}
+
+entity token {
+    key ticker: name;
+    name;
+}
+
+entity bond {
+    key id: byte_array;
+    country;
+}
+
+entity token_balance {
+    key token;
+    mutable amount: integer;
+}
+
+entity bond_balance {
+    key bond;
+    mutable amount: integer;
+}
+
+
+entity tax_vault {
+    key country, token_balance;
+}

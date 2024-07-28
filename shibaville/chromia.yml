@@ -1,0 +1,10 @@
+blockchains:
+  shibaville:
+    module: main
+compile:
+  rellVersion: 0.13.5
+database:
+  schema: schema_shibaville
+test:
+  modules:
+    - test

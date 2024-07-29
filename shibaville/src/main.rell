@@ -2,7 +2,6 @@ module;
 import e: app.entities;
 
 
-
 operation create_token(name, ticker:name) {
   val token = create e.token(name, ticker);
 }
@@ -11,6 +10,23 @@ operation create_token(name, ticker:name) {
 query get_all_tokens() {
     val tokens = e.token @* {}(.ticker, .name);
     return tokens;
+}
+
+operation create_country(name, pubkey, tax_rate:decimal) {
+  val id = (name + pubkey + tax_rate).hash();
+  create e.country(id = id, name = name, creator = pubkey, tax_rate = tax_rate, created_at = op_context.last_block_time);
+}
+
+operation create_town(name, pubkey, banner:text, countryId:byte_array) {
+  val id = (name + pubkey + banner).hash();
+  val country = e.country @{.id == countryId};
+  val newtown = create e.town(id = id, name = name, country = country, owner=pubkey, banner = banner, created_at = op_context.last_block_time);
+  for (x in range(10)) {
+    for (y in range(10)) {
+      val newland = create e.land(x, y);
+      create e.town_lands(newtown, newland) ;
+    }
+  }
 }
 
 

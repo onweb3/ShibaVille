@@ -1,18 +1,52 @@
 module;
 
 entity country {
-  key id: integer;
+  key id: byte_array;
   key name;
   creator: byte_array;
   tax_rate: decimal  = 0.1; // 10% tax rate
+  created_at: timestamp;
 }
 
 entity town {
-    key id: integer;
+    key id: byte_array;
     key name;
+    country;
     owner: byte_array; // change to account later
     banner: text;
     created_at: timestamp;
+}
+
+enum building_type {
+    field,
+}
+
+entity requirements {
+    key building, token_balance;
+}
+
+entity resources_input {
+    key building, token_balance;
+}
+
+entity resources_output {
+    key building, token_balance;
+}
+
+
+entity building {
+    type: building_type;
+    mutable level: integer;
+    mutable health: integer;
+}
+
+entity land {
+    x: integer;
+    y: integer;
+}
+
+entity town_lands{
+    key town, land;
 }
 
 entity token {

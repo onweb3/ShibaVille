@@ -1,14 +1,40 @@
 @test module;
-import ^^.main.{create_token, get_all_tokens};
+import ^^.main.*;
 
+val alice = rell.test.pubkeys.alice;
+val bob = rell.test.pubkeys.bob;
+val charlie = rell.test.pubkeys.charlie;
+
+val alice_kp = rell.test.keypairs.alice; 
+val bob_kp = rell.test.keypairs.bob; 
+val charlie_kp = rell.test.keypairs.charlie;
 
 function test_add_token() {
-    //assert_equals(my_name.name, "World");
+    rell.test.tx()
+        .op(create_token("Wood", ticker = "WD"))
+        .op(create_token("Wood", ticker = "WD"))
+        .op(create_country("UK", alice, 0.1))
+        .run();
+    assert_equals(e.token @ { } (@sum 1), 1);
+    assert_equals(e.country @ { } (@sum 1), 1);
+    val countryId = e.country @ {.name == "UK"}(.id);
+    rell.test.tx()
+        .op(create_town("Paris", alice, "imageurl", countryId))
+        .run();
+        val town = e.town @ {.name == "Paris"};
+        assert_equals(e.town_lands @ {town } (@sum 1), 100);
+        assert_equals(town.town_stats.level, 1);
+        //.op(ft_auth_operation_for(alice)) // Auth operation
+        //.op(follow_page(bob))             
+        //.op(ft_auth_operation_for(bob)) // Auth operation
+        //.op(make_post("My post"))         
+        // .sign(alice_kp, bob_kp)
+        // .run();
+    // assert_true(is_following(alice, bob));
+    // assert_equals(follower @ { } (@sum 1), 1);
+    // assert_equals(post @ { } (@sum 1), 1);
 
-    val tx = rell.test.tx(create_token("bonds", "BND"));
-    //assert_equals(my_name.name, "World");
+   
 
-    tx.run();
-    val tokens = get_all_tokens();
-    assert_equals(tokens.size(), 1);
 }
+

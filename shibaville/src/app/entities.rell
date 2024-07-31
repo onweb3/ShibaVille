@@ -3,9 +3,12 @@ module;
 entity country {
   key id: byte_array;
   key name;
-  creator: byte_array;
   tax_rate: decimal  = 0.1; // 10% tax rate
   created_at: timestamp;
+}
+
+entity referral {
+    key referrer: byte_array , town;
 }
 
 entity town {
@@ -14,21 +17,36 @@ entity town {
     country;
     owner: byte_array; // change to account later
     banner: text;
+    town_stats;
     created_at: timestamp;
 }
 
+entity town_balance {
+    key town, token_balance;
+}
+
+entity town_stats {
+    mutable level:integer = 1;
+    mutable experience:integer = 0;
+}
+
 enum building_type {
-    field,
+    Mine,
+    Factory,
+    Base
 }
 
-entity requirements {
-    key building, token_balance;
+// resources required to build
+entity requirements { 
+    key building_type, token_balance;
 }
 
+// resources required as raw materials
 entity resources_input {
     key building, token_balance;
 }
 
+// resources produced by this entity
 entity resources_output {
     key building, token_balance;
 }
@@ -36,17 +54,25 @@ entity resources_output {
 
 entity building {
     type: building_type;
-    mutable level: integer;
-    mutable health: integer;
+    mutable level: integer = 1;
+    mutable health: integer = 100;
 }
 
+
+
 entity land {
+    key id: integer;
     x: integer;
     y: integer;
+    mutable isEmpty: boolean = true;
 }
 
 entity town_lands{
     key town, land;
+}
+
+entity land_building{
+    key land, building;
 }
 
 entity token {

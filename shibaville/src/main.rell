@@ -6,6 +6,12 @@ operation create_token(name, ticker:name) {
   val token = create e.token(name, ticker);
 }
 
+operation create_requirements(type:integer, amount:integer) {
+  val token = e.token @{.ticker == "WD"};
+  val tokenbalance = create e.token_balance(token, 100);
+  create e.requirements(e.building_type.value(type), tokenbalance);
+}
+
 
 query get_all_tokens() {
     val tokens = e.token @* {}(.ticker, .name);
@@ -14,19 +20,44 @@ query get_all_tokens() {
 
 operation create_country(name, pubkey, tax_rate:decimal) {
   val id = (name + pubkey + tax_rate).hash();
-  create e.country(id = id, name = name, creator = pubkey, tax_rate = tax_rate, created_at = op_context.last_block_time);
+  create e.country(id = id, name = name, tax_rate = tax_rate, created_at = op_context.last_block_time);
+}
+
+query get_all_countries() {
+  return e.country @ {}(
+    .id,
+    .name,
+    .tax_rate,
+    .created_at
+  );
 }
 
 operation create_town(name, pubkey, banner:text, countryId:byte_array) {
   val id = (name + pubkey + banner).hash();
   val country = e.country @{.id == countryId};
-  val newtown = create e.town(id = id, name = name, country = country, owner=pubkey, banner = banner, created_at = op_context.last_block_time);
-  for (x in range(10)) {
-    for (y in range(10)) {
-      val newland = create e.land(x, y);
+  val stats = create e.town_stats();
+  val newtown = create e.town(id = id, name = name, country = country, owner=pubkey, banner = banner, town_stats=stats, created_at = op_context.last_block_time);
+  for (x in range(1,11)) {
+    for (y in range(1,11)) {
+      val newland = create e.land(id= (x*y),x, y);
       create e.town_lands(newtown, newland) ;
     }
   }
+  val token = e.token @{.ticker == "WD"};
+  val tokenbalance = create e.token_balance(token, 200);
+  create e.town_balance(newtown, tokenbalance);
+}
+
+operation create_building(type:integer, townId: byte_array, x:integer, y:integer) {
+  val town = e.town @{.id == townId};
+  val land = e.town_lands@{town}(.land);
+  val requirements = e.requirements @ {.building_type == e.building_type.value(type)}(.token_balance);
+  require(e.town_balance @?{.token_balance.token == requirements.token, .token_balance.amount >= requirements.amount},"You don't have enough tokens to build this building");
+  val building = create e.building(e.building_type.value(type));
+  if (land.isEmpty) {
+    create e.land_building(land, building);
+  }
+
 }
 
 

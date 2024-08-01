@@ -11,10 +11,10 @@ export function CreateCamera(Height, Width) {
 
   //Camera settings
   const YAxis = new THREE.Vector3(0, 1, 1);
-  let cameraOrigin = new THREE.Vector3(0, 0, 0);
-  let cameraAzimuth = 0;
-  let cameraRadius = 4;
-  let cameraElevation = 0;
+  let cameraOrigin = new THREE.Vector3();
+  let cameraAzimuth = 135;
+  let cameraRadius = 15;
+  let cameraElevation = 45;
   const DEG2RAD = Math.PI / 180;
   updateCamera();
 
@@ -28,7 +28,7 @@ export function CreateCamera(Height, Width) {
       cameraRadius *
       Math.cos(cameraAzimuth * DEG2RAD) *
       Math.cos(cameraElevation * DEG2RAD);
-    camera.add(cameraOrigin);
+    //camera.add(cameraOrigin);
     camera.lookAt(cameraOrigin);
     camera.updateMatrix();
   }

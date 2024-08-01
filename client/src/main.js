@@ -7,25 +7,31 @@ window.onload = () => {
   let prevHeight = window.innerHeight;
   let prevWidth = window.innerWidth;
   let camera = CreateCamera(prevHeight, prevWidth);
-
   const renderer = new THREE.WebGLRenderer();
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setAnimationLoop(gameLoop);
   document.body.appendChild(renderer.domElement);
 
-  const geometry = new THREE.BoxGeometry(1, 1, 1);
-  const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-  const cube = new THREE.Mesh(geometry, material);
+  //data
+  const tiles = [];
+  const buildings = [];
 
-  scene.add(cube);
-  const geometry1 = new THREE.BoxGeometry(1, 1, 1);
-  const material1 = new THREE.MeshBasicMaterial({ color: 0x0000ff });
-  const cube1 = new THREE.Mesh(geometry1, material1);
-
-  scene.add(cube1);
-  cube.position.x = 2;
   function initScene() {
+    scene.clear();
+    const tiles = [];
     camera = CreateCamera(prevHeight, prevWidth);
+    for (let x = 0; x < 10; x++) {
+      const column = [];
+      for (let y = 0; y < 10; y++) {
+        const geometry = new THREE.BoxGeometry(1, 1, 1);
+        const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+        const tile = new THREE.Mesh(geometry, material);
+        tile.position.set(x, 0, y);
+        scene.add(tile);
+        column.push(tile);
+      }
+      tiles.push(column);
+    }
   }
 
   function resizeCanvas() {
@@ -58,7 +64,7 @@ window.onload = () => {
   addEventListener("mouseup", onMouseUp, false);
   addEventListener("mousemove", onMouseMove, false);
   addEventListener("contextmenu", NoContextMenu, false);
-
+  initScene();
   function gameLoop() {
     // cube.rotation.x += 0.01;
     // cube.rotation.y += 0.01;

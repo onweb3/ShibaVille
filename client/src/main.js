@@ -18,7 +18,12 @@ window.onload = () => {
   const cube = new THREE.Mesh(geometry, material);
 
   scene.add(cube);
+  const geometry1 = new THREE.BoxGeometry(1, 1, 1);
+  const material1 = new THREE.MeshBasicMaterial({ color: 0x0000ff });
+  const cube1 = new THREE.Mesh(geometry1, material1);
 
+  scene.add(cube1);
+  cube.position.x = 2;
   function initScene() {
     camera = CreateCamera(prevHeight, prevWidth);
   }
@@ -34,21 +39,25 @@ window.onload = () => {
   }
 
   // mouse inputs
-  function onMouseDown() {
+  function onMouseDown(e) {
     console.log("main mouse");
-    camera.onMouseDown();
+    camera.onMouseDown(e);
   }
-  function onMouseUp() {
-    camera.onMouseUp();
+  function onMouseUp(e) {
+    camera.onMouseUp(e);
   }
   function onMouseMove(e) {
     camera.onMouseMove(e);
+  }
+  function NoContextMenu(e) {
+    e.preventDefault();
   }
 
   addEventListener("resize", resizeCanvas);
   addEventListener("mousedown", onMouseDown, false);
   addEventListener("mouseup", onMouseUp, false);
   addEventListener("mousemove", onMouseMove, false);
+  addEventListener("contextmenu", NoContextMenu, false);
 
   function gameLoop() {
     // cube.rotation.x += 0.01;

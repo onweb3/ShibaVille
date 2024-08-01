@@ -1,37 +1,12 @@
 import * as THREE from "three";
+import { CreateCamera } from "./camera.js";
 
 window.onload = () => {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x6dafdb);
-  const camera = new THREE.PerspectiveCamera(
-    45,
-    window.innerWidth / window.innerHeight,
-    0.1,
-    1000
-  );
-
-  let bIsMouseIsDown = false;
-  let prevMouseX = 0;
-  let prevMouseY = 0;
-  let cameraAzimuth = 0;
-  let cameraRadius = 4;
-  let cameraElevation = 0;
-  const DEG2RAD = Math.PI / 360;
-  updateCamera();
-
-  function updateCamera() {
-    camera.position.x =
-      cameraRadius *
-      Math.sin(cameraAzimuth * DEG2RAD) *
-      Math.cos(cameraElevation * DEG2RAD);
-    camera.position.y = cameraRadius * Math.sin(cameraElevation * DEG2RAD);
-    camera.position.z =
-      cameraRadius *
-      Math.cos(cameraAzimuth * DEG2RAD) *
-      Math.cos(cameraElevation * DEG2RAD);
-    camera.lookAt(0, 0, 0);
-    camera.updateMatrix();
-  }
+  let prevHeight = window.innerHeight;
+  let prevWidth = window.innerWidth;
+  let camera = CreateCamera(prevHeight, prevWidth);
 
   const renderer = new THREE.WebGLRenderer();
   renderer.setSize(window.innerWidth, window.innerHeight);
@@ -44,35 +19,41 @@ window.onload = () => {
 
   scene.add(cube);
 
-  function gameLoop() {
-    // cube.rotation.x += 0.01;
-    // cube.rotation.y += 0.01;
+  function initScene() {
+    camera = CreateCamera(prevHeight, prevWidth);
+  }
 
-    renderer.render(scene, camera);
+  function resizeCanvas() {
+    if (window.innerHeight != prevHeight || window.innerWidth != prevWidth) {
+      renderer.setSize(window.innerWidth, window.innerHeight);
+
+      prevHeight = window.innerHeight;
+      prevWidth = window.innerWidth;
+    }
+    initScene();
   }
 
   // mouse inputs
   function onMouseDown() {
-    bIsMouseIsDown = true;
+    console.log("main mouse");
+    camera.onMouseDown();
   }
   function onMouseUp() {
-    bIsMouseIsDown = false;
+    camera.onMouseUp();
   }
   function onMouseMove(e) {
-    console.log([e.screenX, e.screenY]);
-
-    if (bIsMouseIsDown) {
-      cameraAzimuth += (e.screenX - prevMouseX) * 0.5;
-      cameraElevation += (e.screenY - prevMouseY) * 0.5;
-      cameraElevation = Math.min(90, Math.max(0, cameraElevation));
-      updateCamera();
-    }
-
-    prevMouseX = e.screenX;
-    prevMouseY = e.screenY;
+    camera.onMouseMove(e);
   }
 
+  addEventListener("resize", resizeCanvas);
   addEventListener("mousedown", onMouseDown, false);
   addEventListener("mouseup", onMouseUp, false);
   addEventListener("mousemove", onMouseMove, false);
+
+  function gameLoop() {
+    // cube.rotation.x += 0.01;
+    // cube.rotation.y += 0.01;
+
+    renderer.render(scene, camera.camera);
+  }
 };

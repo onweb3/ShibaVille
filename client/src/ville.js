@@ -7,12 +7,29 @@ export function createVille() {
     for (let x = 0; x < 10; x++) {
       const column = [];
       for (let y = 0; y < 10; y++) {
-        const land = { x, y };
+        const land = {
+          x,
+          y,
+          building: undefined,
+          update() {},
+        };
+        if (Math.random() > 0.7) {
+          land.building = "building";
+        }
         column.push(land);
       }
       lands.push(column);
     }
   }
 
-  return lands;
+  function update() {
+    console.log(`updating ville`);
+    for (let x = 0; x < lands.length; x++) {
+      for (let y = 0; y < lands.length; y++) {
+        lands[x][y].update();
+      }
+    }
+  }
+
+  return { lands, update };
 }

@@ -6,6 +6,12 @@ export function createGame() {
   const ville = createVille();
 
   scene.initScene(ville);
+  scene.onObjectSelected = (selectedObject) => {
+    console.log(selectedObject);
+    let { x, y } = selectedObject.userData;
+    const tile = ville.lands[x][y];
+    console.log(tile);
+  };
 
   const gameUpdater = {
     update() {
@@ -18,9 +24,9 @@ export function createGame() {
     gameUpdater.update();
   }, 1000);
 
-  addEventListener("mousedown", scene.onMouseDown, false);
-  addEventListener("mouseup", scene.onMouseUp, false);
-  addEventListener("mousemove", scene.onMouseMove, false);
+  addEventListener("mousedown", scene.onMouseDown.bind(scene), false);
+  addEventListener("mouseup", scene.onMouseUp.bind(scene), false);
+  addEventListener("mousemove", scene.onMouseMove.bind(scene), false);
   addEventListener("contextmenu", (e) => e.preventDefault(), false);
 
   scene.start();

@@ -11,6 +11,10 @@ export function createScene(window) {
   renderer.setSize(window.innerWidth, window.innerHeight);
   document.body.appendChild(renderer.domElement);
 
+  const lineTrace = new THREE.Raycaster();
+  const mousePostition = new THREE.Vector2();
+  let selectedObject = undefined;
+  let onObjectSelected = undefined;
   // ville lands
   //   function createVille() {
   //     const lands = []; // this data should be fetched from the chromia blockchain
@@ -92,8 +96,23 @@ export function createScene(window) {
 
   // mouse inputs
   function onMouseDown(e) {
-    console.log("main mouse");
     camera.onMouseDown(e);
+    mousePostition.x = (e.clientX / renderer.domElement.clientWidth) * 2 - 1;
+    mousePostition.y = -(e.clientY / renderer.domElement.clientHeight) * 2 + 1;
+
+    lineTrace.setFromCamera(mousePostition, camera.camera);
+
+    let hitResult = lineTrace.intersectObjects(scene.children, false);
+    if (hitResult.length > 0) {
+      if (selectedObject) {
+        selectedObject.material.emissive.setHex(0);
+      }
+      selectedObject = hitResult[0].object;
+      selectedObject.material.emissive.setHex(0xff0000);
+      if (this.onObjectSelected) {
+        this.onObjectSelected(selectedObject);
+      }
+    }
   }
   function onMouseUp(e) {
     camera.onMouseUp(e);
@@ -117,6 +136,7 @@ export function createScene(window) {
   }
 
   return {
+    onObjectSelected,
     initScene,
     onMouseDown,
     onMouseUp,

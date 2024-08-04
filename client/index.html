@@ -12,7 +12,12 @@
         }
       }
     </script>
-    <script type="module" src="/src/entry.js"></script>
+    <script type="module">
+      import { createGame } from "./src/entry.js";
+      window.onload = () => {
+        window.game = createGame();
+      };
+    </script>
     <title>ShibaVille(Beta)</title>
   </head>
   <body>

@@ -11,11 +11,20 @@ export function createVille() {
           x,
           y,
           building: undefined,
-          update() {},
+          update() {
+            const rand = Math.random();
+            if (rand < 0.01) {
+              if (this.building === undefined) {
+                this.building = "buidling-lvl1";
+              } else if (this.building === "buidling-lvl1") {
+                this.building = "buidling-lvl2";
+              } else if (this.building === "buidling-lvl2") {
+                this.building = "buidling-lvl3";
+              }
+              console.log(this.building);
+            }
+          },
         };
-        if (Math.random() > 0.7) {
-          land.building = "building";
-        }
         column.push(land);
       }
       lands.push(column);
@@ -23,7 +32,7 @@ export function createVille() {
   }
 
   function update() {
-    console.log(`updating ville`);
+    console.log("update ville");
     for (let x = 0; x < lands.length; x++) {
       for (let y = 0; y < lands.length; y++) {
         lands[x][y].update();

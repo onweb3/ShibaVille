@@ -9,7 +9,6 @@ export function createScene(window) {
   let camera = CreateCamera(prevHeight, prevWidth);
   const renderer = new THREE.WebGLRenderer();
   renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.setAnimationLoop(gameLoop);
   document.body.appendChild(renderer.domElement);
 
   // ville lands
@@ -65,20 +64,39 @@ export function createScene(window) {
         tile.position.set(x, -0.5, y);
         scene.add(tile);
         column.push(tile);
+      }
+      tiles.push(column);
+      buildings.push([...Array(ville.lands.length)]);
+    }
+  }
 
-        // buidling
-        if (ville.lands[x][y].building === "building") {
-          const Buildinggeometry = new THREE.BoxGeometry(1, 1, 1);
+  function update(ville) {
+    //console.log("update scene --------");
+    for (let x = 0; x < ville.lands.length; x++) {
+      for (let y = 0; y < ville.lands.length; y++) {
+        // update buidling
+        const land = ville.lands[x][y];
+        if (land.building && land.building.startsWith("buidling")) {
+          const height = Number(land.building.slice(-1));
+
+          const Buildinggeometry = new THREE.BoxGeometry(1, height, 1);
           const Buildingmaterial = new THREE.MeshLambertMaterial({
             color: 0x000500,
           });
-          const Building = new THREE.Mesh(Buildinggeometry, Buildingmaterial);
-          Building.position.set(x, 0.5, y);
-          scene.add(Building);
-          column.push(Building);
+          const BuildingMesh = new THREE.Mesh(
+            Buildinggeometry,
+            Buildingmaterial
+          );
+          BuildingMesh.position.set(x, height / 2, y);
+          if (buildings[x][y]) {
+            scene.remove(buildings[x][y]);
+            //console.log(x, y, "removed");
+          }
+          scene.add(BuildingMesh);
+
+          buildings[x][y] = BuildingMesh;
         }
       }
-      tiles.push(column);
     }
   }
 
@@ -97,6 +115,9 @@ export function createScene(window) {
     e.preventDefault();
   }
 
+  function start() {
+    renderer.setAnimationLoop(gameLoop);
+  }
   function gameLoop() {
     // cube.rotation.x += 0.01;
     // cube.rotation.y += 0.01;
@@ -110,5 +131,7 @@ export function createScene(window) {
     onMouseDown,
     onMouseUp,
     onMouseMove,
+    update,
+    start,
   };
 }

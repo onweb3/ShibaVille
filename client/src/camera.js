@@ -11,9 +11,9 @@ export function CreateCamera(Height, Width) {
 
   //Camera settings
   const YAxis = new THREE.Vector3(0, 1, 1);
-  let cameraOrigin = new THREE.Vector3(15, 5, 0);
-  let cameraAzimuth = 135;
-  let cameraRadius = 50;
+  let cameraOrigin = new THREE.Vector3(3, 3, 3);
+  let cameraAzimuth = 120;
+  let cameraRadius = 25;
   let cameraElevation = 45;
   const DEG2RAD = Math.PI / 180;
   updateCamera();

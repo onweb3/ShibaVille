@@ -14,6 +14,7 @@
     </script>
     <script type="module">
       import { createGame } from "./src/entry.js";
+
       window.onload = () => {
         window.game = createGame();
       };
@@ -21,11 +22,42 @@
     <title>ShibaVille(Beta)</title>
   </head>
   <body>
-    <div
-      id="game"
-      style="position: absolute; top: 0; left: 0; background-color: white"
-    >
-      Hi
+    <div id="game">
+      <div id="game-left">
+        <div id="ville-info">Ville info</div>
+        <div id="game-menu">
+          <button>Gamebutton</button>
+          <button>Gamebutton</button>
+          <button>Gamebutton</button>
+          <button>Gamebutton</button>
+          <button>Gamebutton</button>
+        </div>
+      </div>
+      <div id="game-ui">
+        <div id="top-bar">
+          <button>1</button>
+          <button>1</button>
+          <button>1</button>
+          <button>1</button>
+        </div>
+        <div id="main">
+          <div id="login">
+            <h1>Login</h1>
+            <input id="username" type="text" />
+            <button id="loginBtn">Login</button>
+          </div>
+        </div>
+        <div id="bot-bar">
+          <button>1</button>
+          <button>1</button>
+          <button>1</button>
+          <button>1</button>
+        </div>
+      </div>
+      <div id="game-right">
+        <button>Gamebutton</button>
+        <button>Gamebutton</button>
+      </div>
     </div>
   </body>
 </html>

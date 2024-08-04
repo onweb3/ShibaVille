@@ -1,8 +1,7 @@
 import * as THREE from "three";
 import { CreateCamera } from "./camera.js";
-import { createVille } from "./ville.js";
 
-window.onload = () => {
+export function createScene(window) {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x6dafdb);
   let prevHeight = window.innerHeight;
@@ -35,7 +34,6 @@ window.onload = () => {
   //   }
 
   //data
-  const ville = createVille();
 
   const tiles = [];
   const buildings = [];
@@ -53,7 +51,7 @@ window.onload = () => {
     lights[3].position.set(0, 1, 1);
     scene.add(...lights);
   }
-  function initScene() {
+  function initScene(ville) {
     scene.clear();
     const tiles = [];
     lightSetup();
@@ -84,16 +82,6 @@ window.onload = () => {
     }
   }
 
-  function resizeCanvas() {
-    if (window.innerHeight != prevHeight || window.innerWidth != prevWidth) {
-      renderer.setSize(window.innerWidth, window.innerHeight);
-
-      prevHeight = window.innerHeight;
-      prevWidth = window.innerWidth;
-    }
-    initScene();
-  }
-
   // mouse inputs
   function onMouseDown(e) {
     console.log("main mouse");
@@ -109,12 +97,6 @@ window.onload = () => {
     e.preventDefault();
   }
 
-  addEventListener("resize", resizeCanvas);
-  addEventListener("mousedown", onMouseDown, false);
-  addEventListener("mouseup", onMouseUp, false);
-  addEventListener("mousemove", onMouseMove, false);
-  addEventListener("contextmenu", NoContextMenu, false);
-  initScene();
   function gameLoop() {
     // cube.rotation.x += 0.01;
     // cube.rotation.y += 0.01;
@@ -122,4 +104,11 @@ window.onload = () => {
 
     renderer.render(scene, camera.camera);
   }
-};
+
+  return {
+    initScene,
+    onMouseDown,
+    onMouseUp,
+    onMouseMove,
+  };
+}

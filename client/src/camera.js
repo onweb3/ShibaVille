@@ -1,7 +1,7 @@
 import * as THREE from "three";
 
 export function CreateCamera(Height, Width) {
-  const camera = new THREE.PerspectiveCamera(75, Width / Height, 0.1, 1000);
+  const camera = new THREE.PerspectiveCamera(45, Width / Height, 0.1, 1000);
 
   // mouse inputs
   let bIsleftMouseDown = false; // button 0
@@ -11,9 +11,9 @@ export function CreateCamera(Height, Width) {
 
   //Camera settings
   const YAxis = new THREE.Vector3(0, 1, 1);
-  let cameraOrigin = new THREE.Vector3();
+  let cameraOrigin = new THREE.Vector3(15, 5, 0);
   let cameraAzimuth = 135;
-  let cameraRadius = 15;
+  let cameraRadius = 50;
   let cameraElevation = 45;
   const DEG2RAD = Math.PI / 180;
   updateCamera();

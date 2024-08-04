@@ -7,17 +7,6 @@ export function createGame() {
 
   scene.initScene(ville);
 
-  //   function resizeCanvas() {
-  //     if (window.innerHeight != prevHeight || window.innerWidth != prevWidth) {
-  //       renderer.setSize(window.innerWidth, window.innerHeight);
-
-  //       prevHeight = window.innerHeight;
-  //       prevWidth = window.innerWidth;
-  //     }
-  //     scene.initScene(ville);
-  //   }
-
-  //   addEventListener("resize", resizeCanvas);
   const gameUpdater = {
     update() {
       ville.update();

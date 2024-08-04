@@ -1,12 +1,12 @@
 import * as THREE from "three";
 import { CreateCamera } from "./camera.js";
+import { createAssetInst } from "./factory.js";
 
 export function createScene(window) {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x6dafdb);
-  let prevHeight = window.innerHeight;
-  let prevWidth = window.innerWidth;
-  let camera = CreateCamera(prevHeight, prevWidth);
+
+  let camera = CreateCamera(window.innerHeight, window.innerWidth);
   const renderer = new THREE.WebGLRenderer();
   renderer.setSize(window.innerWidth, window.innerHeight);
   document.body.appendChild(renderer.domElement);
@@ -54,14 +54,12 @@ export function createScene(window) {
     scene.clear();
     const tiles = [];
     lightSetup();
-    camera = CreateCamera(prevHeight, prevWidth);
+    // camera = CreateCamera(prevHeight, prevWidth);
     for (let x = 0; x < ville.lands.length; x++) {
       const column = [];
       for (let y = 0; y < ville.lands.length; y++) {
-        const geometry = new THREE.BoxGeometry(1, 1, 1);
-        const material = new THREE.MeshLambertMaterial({ color: 0x00aa00 });
-        const tile = new THREE.Mesh(geometry, material);
-        tile.position.set(x, -0.5, y);
+        const terrainId = ville.lands[x][y]?.terrainId;
+        const tile = createAssetInst(terrainId, x, y);
         scene.add(tile);
         column.push(tile);
       }
@@ -75,26 +73,18 @@ export function createScene(window) {
     for (let x = 0; x < ville.lands.length; x++) {
       for (let y = 0; y < ville.lands.length; y++) {
         // update buidling
-        const land = ville.lands[x][y];
-        if (land.building && land.building.startsWith("buidling")) {
-          const height = Number(land.building.slice(-1));
+        const currentBuildingId = buildings[x][y]?.userData.id;
+        const newBuildingId = ville.lands[x][y].buildingId;
 
-          const Buildinggeometry = new THREE.BoxGeometry(1, height, 1);
-          const Buildingmaterial = new THREE.MeshLambertMaterial({
-            color: 0x000500,
-          });
-          const BuildingMesh = new THREE.Mesh(
-            Buildinggeometry,
-            Buildingmaterial
-          );
-          BuildingMesh.position.set(x, height / 2, y);
-          if (buildings[x][y]) {
-            scene.remove(buildings[x][y]);
-            //console.log(x, y, "removed");
-          }
-          scene.add(BuildingMesh);
+        if (!newBuildingId && currentBuildingId) {
+          scene.remove(buildings[x][y]);
+          buildings[x][y] = undefined;
+        }
 
-          buildings[x][y] = BuildingMesh;
+        if (newBuildingId != currentBuildingId) {
+          scene.remove(buildings[x][y]);
+          buildings[x][y] = createAssetInst(newBuildingId, x, y);
+          scene.add(buildings[x][y]);
         }
       }
     }

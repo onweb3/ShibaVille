@@ -15,10 +15,10 @@ export function createScene(window) {
   document.body.appendChild(renderer.domElement);
 
   camera = new THREE.PerspectiveCamera(
-    60,
+    45,
     window.innerWidth / window.innerHeight,
     1,
-    1000
+    10000
   );
   camera.position.set(600, 600, 600);
 
@@ -38,6 +38,7 @@ export function createScene(window) {
   controls.maxDistance = 300;
 
   controls.maxPolarAngle = Math.PI / 4;
+  controls.minAzimuthAngle = Math.PI / 4;
 
   const lineTrace = new THREE.Raycaster();
   const mousePostition = new THREE.Vector2();
@@ -130,7 +131,7 @@ export function createScene(window) {
 
   // mouse inputs
   function onMouseDown(e) {
-    if (e.button === 0) {
+    if (e.button === 0 && e.target.id === "") {
       mousePostition.x = (e.clientX / renderer.domElement.clientWidth) * 2 - 1;
       mousePostition.y =
         -(e.clientY / renderer.domElement.clientHeight) * 2 + 1;

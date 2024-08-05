@@ -1,15 +1,43 @@
 import * as THREE from "three";
-import { CreateCamera } from "./camera.js";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { createAssetInst } from "./factory.js";
 
-export function createScene(window) {
-  const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x6dafdb);
+let camera, controls, scene, renderer;
 
-  let camera = CreateCamera(window.innerHeight, window.innerWidth);
-  const renderer = new THREE.WebGLRenderer();
+export function createScene(window) {
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x6dafdb);
+  scene.fog = new THREE.FogExp2(0x6dafdb, 0.002);
+
+  renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setPixelRatio(window.devicePixelRatio);
   renderer.setSize(window.innerWidth, window.innerHeight);
   document.body.appendChild(renderer.domElement);
+
+  camera = new THREE.PerspectiveCamera(
+    60,
+    window.innerWidth / window.innerHeight,
+    1,
+    1000
+  );
+  camera.position.set(600, 600, 600);
+
+  // controls
+
+  controls = new OrbitControls(camera, renderer.domElement);
+  controls.listenToKeyEvents(window); // optional
+
+  //controls.addEventListener( 'change', render ); // call this only in static scenes (i.e., if there is no animation loop)
+
+  controls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
+  controls.dampingFactor = 0.05;
+
+  controls.screenSpacePanning = false;
+
+  controls.minDistance = 100;
+  controls.maxDistance = 300;
+
+  controls.maxPolarAngle = Math.PI / 4;
 
   const lineTrace = new THREE.Raycaster();
   const mousePostition = new THREE.Vector2();
@@ -43,15 +71,13 @@ export function createScene(window) {
 
   function lightSetup() {
     const lights = [
-      new THREE.AmbientLight(0xffffff, 0.5),
-      new THREE.DirectionalLight(0xffffff, 1),
+      new THREE.AmbientLight(0xffffff),
       new THREE.DirectionalLight(0xffffff, 3),
       new THREE.DirectionalLight(0xffffff, 3),
     ];
 
-    lights[1].position.set(0, 1, 0);
-    lights[2].position.set(1, 1, 0);
-    lights[3].position.set(0, 1, 1);
+    lights[1].position.set(1, 1, 1);
+    lights[2].position.set(-1, -1, -1);
     scene.add(...lights);
   }
   function initScene(ville) {
@@ -70,6 +96,14 @@ export function createScene(window) {
       tiles.push(column);
       buildings.push([...Array(ville.lands.length)]);
     }
+    window.addEventListener("resize", onWindowResize);
+  }
+
+  function onWindowResize() {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+
+    renderer.setSize(window.innerWidth, window.innerHeight);
   }
 
   function update(ville) {
@@ -96,30 +130,28 @@ export function createScene(window) {
 
   // mouse inputs
   function onMouseDown(e) {
-    camera.onMouseDown(e);
-    mousePostition.x = (e.clientX / renderer.domElement.clientWidth) * 2 - 1;
-    mousePostition.y = -(e.clientY / renderer.domElement.clientHeight) * 2 + 1;
+    if (e.button === 0) {
+      mousePostition.x = (e.clientX / renderer.domElement.clientWidth) * 2 - 1;
+      mousePostition.y =
+        -(e.clientY / renderer.domElement.clientHeight) * 2 + 1;
 
-    lineTrace.setFromCamera(mousePostition, camera.camera);
+      lineTrace.setFromCamera(mousePostition, camera);
 
-    let hitResult = lineTrace.intersectObjects(scene.children, false);
-    if (hitResult.length > 0) {
-      if (selectedObject) {
-        selectedObject.material.emissive.setHex(0);
-      }
-      selectedObject = hitResult[0].object;
-      selectedObject.material.emissive.setHex(0xff0000);
-      if (this.onObjectSelected) {
-        this.onObjectSelected(selectedObject);
+      let hitResult = lineTrace.intersectObjects(scene.children, false);
+      if (hitResult.length > 0) {
+        if (selectedObject) {
+          selectedObject.material.emissive.setHex(0);
+        }
+        selectedObject = hitResult[0].object;
+        selectedObject.material.emissive.setHex(0xff0000);
+        if (this.onObjectSelected) {
+          this.onObjectSelected(selectedObject);
+        }
       }
     }
   }
-  function onMouseUp(e) {
-    camera.onMouseUp(e);
-  }
-  function onMouseMove(e) {
-    camera.onMouseMove(e);
-  }
+  function onMouseUp(e) {}
+  function onMouseMove(e) {}
   function NoContextMenu(e) {
     e.preventDefault();
   }
@@ -131,8 +163,8 @@ export function createScene(window) {
     // cube.rotation.x += 0.01;
     // cube.rotation.y += 0.01;
     //ville.update();
-
-    renderer.render(scene, camera.camera);
+    controls.update();
+    renderer.render(scene, camera);
   }
 
   return {

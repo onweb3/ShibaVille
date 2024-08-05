@@ -4,9 +4,9 @@ export function createVille() {
   function init() {
     // for now we use a temp data to build an MVP to see how the ville looks
     // We do the same thing as create_ville operation here. (10x10 grid)
-    for (let x = 0; x < 24; x++) {
+    for (let x = 0; x < 32; x++) {
       const column = [];
-      for (let y = 0; y < 24; y++) {
+      for (let y = 0; y < 32; y++) {
         const land = createLand(x, y);
         column.push(land);
       }

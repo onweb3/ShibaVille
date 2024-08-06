@@ -12,6 +12,19 @@
         }
       }
     </script>
+    <script src="https://c0f4f41c-2f55-4863-921b-sdk-docs.github.io/cdn/metamask-sdk.js"></script>
+    <script>
+      const sdk = new MetaMaskSDK.MetaMaskSDK({
+        dappMetadata: {
+          name: "ShibaVille",
+          url: "http://127.0.0.1:5500",
+        },
+        logging: {
+          sdk: true,
+        },
+        preferDesktop: true,
+      });
+    </script>
     <script type="module">
       import { createGame } from "./src/entry.js";
 
@@ -22,22 +35,19 @@
     <title>ShibaVille(Beta)</title>
   </head>
   <body>
-    <div id="game-left">
-      <div id="ville-info">Ville info</div>
-    </div>
     <div id="game-menu">
-      <button id="menuBtn">Gamebutton</button>
-      <button id="menuBtn">Gamebutton</button>
-      <button id="menuBtn">Gamebutton</button>
-      <button id="menuBtn">Gamebutton</button>
-      <button id="menuBtn">Gamebutton</button>
+      <button id="menuBtn" class="mainMenuBtn">QI</button>
+      <button id="menuBtn" class="mainMenuBtn">QI</button>
+      <button id="menuBtn" class="mainMenuBtn">QI</button>
+      <button id="menuBtn" class="mainMenuBtn">QI</button>
+      <button id="menuBtn" class="mainMenuBtn">QI</button>
     </div>
 
     <div id="top-bar">
-      <button>1</button>
-      <button>1</button>
-      <button>1</button>
-      <button>1</button>
+      <button id="menuBtn">1</button>
+      <button id="menuBtn">1</button>
+      <button id="menuBtn">1</button>
+      <button id="menuBtn">1</button>
     </div>
     <div id="main">
       <div id="login">
@@ -47,15 +57,15 @@
       </div>
     </div>
     <div id="bot-bar">
-      <button>1</button>
-      <button>1</button>
-      <button>1</button>
-      <button>1</button>
+      <button id="menuBtn">1</button>
+      <button id="menuBtn">1</button>
+      <button id="menuBtn">1</button>
+      <button id="menuBtn">1</button>
     </div>
 
     <div id="game-right">
-      <button>Gamebutton</button>
-      <button>Gamebutton</button>
+      <button id="menuBtn">Gamebutton</button>
+      <button id="menuBtn">Gamebutton</button>
     </div>
   </body>
 </html>

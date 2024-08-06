@@ -1,20 +1,39 @@
-export function auth() {
-  let userAuth = true;
+export function metamaskAuth() {
+  let provider;
+  let connectedAccount;
 
-  function displayLogin() {
-    return true;
+  function connect() {
+    sdk
+      .connect()
+      .then((res) => {
+        provider = sdk.getProvider();
+        console.log(res);
+        connectedAccount = res;
+      })
+      .catch((e) => console.log("request accounts ERR", e));
   }
 
-  function login(username) {
-    if (username.length > 3) {
-      let userAuth = true;
-    }
-
-    return false;
+  function addEthereumChain() {
+    provider
+      .request({
+        method: "wallet_addEthereumChain",
+        params: [
+          {
+            chainId: "0x61",
+            chainName: "BSC Testnet",
+            blockExplorerUrls: ["https://testnet.bscscan.com"],
+            nativeCurrency: { symbol: "BSC", decimals: 18 },
+            rpcUrls: ["https://bsc-testnet-dataseed.bnbchain.org/"],
+          },
+        ],
+      })
+      .then((res) => console.log("add", res))
+      .catch((e) => console.log("ADD ERR", e));
   }
 
   return {
-    displayLogin,
-    login,
+    connect,
+    addEthereumChain,
+    connectedAccount,
   };
 }

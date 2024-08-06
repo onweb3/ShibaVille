@@ -8,6 +8,32 @@ body {
   position: absolute;
   padding: 50px;
 }
+
+#game-menu {
+  top: 200px;
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+#menuBtn {
+  padding: 20px;
+  border-top-right-radius: 15px;
+  border-bottom-right-radius: 15px;
+  background-color: lightcyan;
+  border: 3px solid white;
+}
+
+#menuBtn:hover {
+  padding: 20px;
+  padding-left: 40px;
+  border-top-right-radius: 15px;
+  border-bottom-right-radius: 15px;
+  background-color: rgb(151, 253, 253);
+  border: 3px solid white;
+}
+
 #game-right {
   position: absolute;
   right: 0;
@@ -16,14 +42,6 @@ body {
   flex-direction: column;
   gap: 10px;
   align-self: center;
-}
-
-#game-menu {
-  top: 200px;
-  position: absolute;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
 }
 
 #login {

@@ -13,15 +13,15 @@ contract BuildingInfo {
 
     mapping(uint256 => BuildingData) public buildingData;
 
-    address public owner;
+    address public shibavilleContract;
 
-    modifier onlyOwner() {
-        require(msg.sender == owner, "Only owner can call this function");
+     modifier onlyShibavilleContract() {
+        require(msg.sender == shibavilleContract, "Caller is not the Shibaville contract");
         _;
     }
 
     constructor() {
-        owner = msg.sender;
+        shibavilleContract = msg.sender;
     }
 
     function setBuildingData(
@@ -31,7 +31,7 @@ contract BuildingInfo {
         uint256[] memory outputResourceIds,
         uint256[] memory outputResourceAmounts,
         uint256 theme
-    ) external onlyOwner {
+    ) external onlyShibavilleContract {
         require(inputResourceIds.length == inputResourceAmounts.length, "Input resources and amounts length mismatch");
         require(outputResourceIds.length == outputResourceAmounts.length, "Output resources and amounts length mismatch");
 

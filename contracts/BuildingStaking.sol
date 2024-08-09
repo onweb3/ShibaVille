@@ -39,15 +39,11 @@ contract ERC721Staking {
     IERC721 public erc721Contract;
     address public shibaVilleContract;
     IBuildingInfo public buildingInfoContract;
-    address public owner;
+    
 
     uint256 public constant MAX_STAKE_DURATION = 24 hours;
     uint256 public constant MIN_STAKE_DURATION = 1 hours;
 
-    modifier onlyOwner() {
-        require(msg.sender == owner, "Only owner can call this function");
-        _;
-    }
 
     event Staked(address indexed staker, uint256 buildingId, uint256 villeId, uint256 position, uint256 timestamp);
     event Unstaked(address indexed staker, uint256 buildingId, uint256 villeId, uint256 timestamp);
@@ -56,7 +52,7 @@ contract ERC721Staking {
     constructor(address _erc721ContractAddress, address _buildingInfoContractAddress) {
         erc721Contract = IERC721(_erc721ContractAddress);
         buildingInfoContract = IBuildingInfo(_buildingInfoContractAddress);
-        owner = msg.sender;
+        shibaVilleContract = msg.sender;
     }
 
     function stake(uint256 buildingId, uint256 villeId, uint256 position) external {
@@ -142,7 +138,5 @@ contract ERC721Staking {
         return stakingInfos;
     }
 
-    function setShibaVilleContract(address _shibaVilleContractAddress) external onlyOwner {
-        shibaVilleContract = _shibaVilleContractAddress;
-    }
+   
 }

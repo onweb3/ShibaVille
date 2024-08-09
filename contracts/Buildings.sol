@@ -9,21 +9,15 @@ contract Buildings is ERC721URIStorage {
 
     uint256 private _currentTokenId = 0;
     address public shibavilleContract;
-    address public owner;
     string private _baseTokenURI;
 
     constructor(string memory baseTokenURI) ERC721("Buildings", "BLDG") {
-        owner = msg.sender;
+        shibavilleContract = msg.sender;
         _baseTokenURI = baseTokenURI;
     }
 
     modifier onlyShibavilleContract() {
         require(msg.sender == shibavilleContract, "Caller is not the Shibaville contract");
-        _;
-    }
-
-    modifier onlyOwner() {
-        require(msg.sender == owner, "Not the contract owner");
         _;
     }
 
@@ -43,17 +37,7 @@ contract Buildings is ERC721URIStorage {
         return newTokenId;
     }
 
-    function setBaseURI(string memory baseTokenURI) external onlyOwner {
-        _baseTokenURI = baseTokenURI;
-    }
+    
 
-    function transferOwnership(address newOwner) external onlyOwner {
-        require(newOwner != address(0), "New owner is the zero address");
-        owner = newOwner;
-    }
-
-    function setShibaContractAddress(address _shibavilleContract) external onlyOwner {
-        require(_shibavilleContract != address(0), "ShibaContract is the zero address");
-        shibavilleContract = _shibavilleContract;
-    }
+    
 }

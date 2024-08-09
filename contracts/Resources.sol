@@ -5,19 +5,13 @@ import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 
 contract Resources is ERC1155 {
     address public shibavilleContract;
-    address public owner;
 
     constructor(string memory uri) ERC1155(uri) {
-        owner = msg.sender;
+        shibavilleContract = msg.sender;
     }
 
     modifier onlyShibavilleContract() {
         require(msg.sender == shibavilleContract, "Caller is not the Shibaville contract");
-        _;
-    }
-
-    modifier onlyOwner() {
-        require(msg.sender == owner, "Not the contract owner");
         _;
     }
 
@@ -29,11 +23,5 @@ contract Resources is ERC1155 {
         _mintBatch(to, ids, amounts, data);
     }
 
-    function setShibavilleContract(address _shibavilleContract) external onlyOwner {
-        shibavilleContract = _shibavilleContract;
-    }
-
-    function setURI(string memory newuri) external onlyOwner {
-        _setURI(newuri);
-    }
+  
 }

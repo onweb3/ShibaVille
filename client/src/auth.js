@@ -32,6 +32,7 @@ export function metamaskAuth() {
   }
 
   return {
+    sdk,
     connect,
     addEthereumChain,
     connectedAccount,

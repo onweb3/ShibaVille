@@ -1,0 +1,15 @@
+{
+  "name": "contracts",
+  "version": "1.0.0",
+  "description": "ShibaVille Contracts\r Overview\r Welcome to the ShibaVille Contracts repository! This project contains the smart contracts for ShibaVille, a blockchain-based game where players can stake and manage buildings on their virtual land (villes). Please note that the code is currently in beta, and we do not recommend using it in production environments.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.0.2"
+  }
+}

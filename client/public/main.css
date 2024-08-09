@@ -26,12 +26,11 @@ body {
 }
 
 #menuBtn:hover {
-  padding: 20px;
-  padding-left: 40px;
-  border-top-right-radius: 15px;
-  border-bottom-right-radius: 15px;
   background-color: rgb(151, 253, 253);
-  border: 3px solid white;
+}
+
+#menuBtn:active {
+  background-color: rgb(109, 248, 248);
 }
 
 #game-right {

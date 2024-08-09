@@ -258,7 +258,7 @@ contract ShibaVille {
         require(!villes[attackerVilleId].occupied, "Attacker ville is occupied");
         require(!villes[defenderVilleId].occupied, "Defender ville is already occupied");
 
-        warContract.initiateBattle(attackerVilleId, defenderVilleId, attackerTroopIds, attackerTroopAmounts);
+        warContract.initiateBattle(attackerVilleId, attackerTroopIds, attackerTroopAmounts, defenderVilleId);
     }
 
     function finalizeBattle(uint256 attackerVilleId, uint256 defenderVilleId, bool attackerWon, uint256[] memory attackerTroopIds, uint256[] memory attackerTroopsLost, uint256[] memory defenderTroopIds, uint256[] memory defenderTroopsLost) public authorizedOnly {
@@ -269,14 +269,11 @@ contract ShibaVille {
             villes[attackerVilleId].occupied = false;
         }
 
-        // Burn dead troops for both attacker and defender
-        for (uint256 i = 0; i < attackerTroopIds.length; i++) {
-            resourcesContract.burn(VilleContract.ownerOf(attackerVilleId), attackerTroopIds[i], attackerTroopsLost[i]);
-        }
-
-        for (uint256 i = 0; i < defenderTroopIds.length; i++) {
-            resourcesContract.burn(VilleContract.ownerOf(defenderVilleId), defenderTroopIds[i], defenderTroopsLost[i]);
-        }
+        // Burn dead troops for both attacker and defender 
+        resourcesContract.burn(VilleContract.ownerOf(attackerVilleId), attackerTroopIds, attackerTroopsLost);
+        
+        resourcesContract.burn(VilleContract.ownerOf(defenderVilleId), defenderTroopIds, defenderTroopsLost);
+        
     }
 
     function liberateVille(uint256 occupiedVilleId, uint256[] memory liberatorTroopIds, uint256[] memory liberatorTroopAmounts) public authorizedOnly {
@@ -292,12 +289,7 @@ contract ShibaVille {
         }
 
         // Burn dead troops for both liberator and occupying troops
-        for (uint256 i = 0; i < liberatorTroopIds.length; i++) {
-            resourcesContract.burn(VilleContract.ownerOf(occupiedVilleId), liberatorTroopIds[i], liberatorTroopsLost[i]);
-        }
-
-        for (uint256 i = 0; i < occupyingTroopIds.length; i++) {
-            resourcesContract.burn(VilleContract.ownerOf(occupiedVilleId), occupyingTroopsLost[i], occupyingTroopsLost[i]);
-        }
+        resourcesContract.burn(VilleContract.ownerOf(occupiedVilleId), liberatorTroopIds, liberatorTroopsLost);
+        resourcesContract.burn(VilleContract.ownerOf(occupiedVilleId), occupyingTroopIds, occupyingTroopsLost);
     }
 }

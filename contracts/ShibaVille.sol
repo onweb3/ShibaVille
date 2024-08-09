@@ -62,6 +62,11 @@ contract ShibaVille {
         _;
     }
 
+    modifier onlyDev() {
+        require(msg.sender == dev, "Caller is not the dev!");
+        _;
+    }
+
     function addAuthorizedContract(address _contract) internal {
         authorizedContracts.push(_contract);
     }
@@ -234,12 +239,23 @@ contract ShibaVille {
         }
     }
 
-    function createBuilding(uint256 buildingType, address to) external returns (uint256) {
+    function createBuildingType(string memory name,
+         uint256[] memory inputResourceIds,
+         uint256[] memory inputResourceAmounts,
+         uint256[] memory outputResourceIds,
+         uint256[] memory outputResourceAmounts) external onlyDev returns (uint256) {
+
+        uint typeId = buildingInfoContract.addNewType(name, inputResourceIds, inputResourceAmounts, outputResourceIds, outputResourceAmounts);
+
+        return typeId;
+    }
+
+    function createBuilding(uint256 buildingType, uint256 theme, address to) external returns (uint256) {
         // Mint the ERC721 token and get the new tokenId
         uint256 tokenId = buildingsContract.safeMint(to);
 
         // add the building info
-        //buildingInfoContract.addBuilding(tokenId, buildingType);
+        buildingInfoContract.setBuildingData(tokenId, buildingType, theme);
 
         return tokenId;
     }
@@ -292,4 +308,5 @@ contract ShibaVille {
         resourcesContract.burn(VilleContract.ownerOf(occupiedVilleId), liberatorTroopIds, liberatorTroopsLost);
         resourcesContract.burn(VilleContract.ownerOf(occupiedVilleId), occupyingTroopIds, occupyingTroopsLost);
     }
+
 }

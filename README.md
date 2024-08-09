@@ -1,6 +1,6 @@
-**Shibaville: A Fully On-Chain Game**
+**Shibaville: A Fully On-Chain Tower Defense Game**
 
-Shibaville is a revolutionary on-chain game now being built on the Binance Smart Chain (BSC) and Greenfield storage.
+Shibaville is a revolutionary on-chain game now being built on the high-performance, low-cost new Binance Chain (OPBNB) and Greenfield for 3D assets storage.
 All game mechanics, rules, and actions are embedded in smart contracts, ensuring a transparent, fair, and accessible experience for players across multiple platforms.
 In Shibaville, players immerse themselves in building, resource management, and strategic warfare while contributing to a vibrant and dynamic in-game economy.
 
@@ -61,4 +61,11 @@ In Shibaville, players immerse themselves in building, resource management, and 
 
 Shibaville is pioneering a new era of blockchain gaming by fully leveraging on-chain mechanics to ensure fairness, transparency, and scalability.
 The game’s initial contracts offer a streamlined experience, showcasing core functionalities. Future updates will expand on these mechanics, introducing more complex interactions, dynamic gameplay, and an engaging user experience.
-By building on BSC and fostering an open-source community, Shibaville is poised to set new standards in the web3 gaming space.
+By building on OPBNB and fostering an open-source community, Shibaville is poised to set new standards in the web3 on-chain gaming space.
+
+---
+
+### Links
+
+Website: https://shibaville.io
+x: https://x.com/ShibaVille_io

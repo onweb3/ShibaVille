@@ -195,14 +195,14 @@ contract ShibaVille {
         // Get the holders of shares for this tokenId
         address[] memory holders = sharesContract.getHolders(tokenId);
 
-        uint256 totalShares = 100; // Total shares assumed to be 100
+        uint256 totalShares = 10000; // Total shares assumed to be 10000
 
         // Calculate resource distribution
         for (uint256 i = 0; i < holders.length; i++) {
             address holder = holders[i];
             uint256 holderShares = sharesContract.balanceOf(holder, tokenId);
-            uint256 sharePercentage = (holderShares * 100) / totalShares;
-            uint256 holderResourceAmount = (resourceAmount * sharePercentage) / 100;
+            uint256 sharePercentage = (holderShares * 100 ether) / totalShares;
+            uint256 holderResourceAmount = (resourceAmount * sharePercentage);
 
             // Mint resources to the holder
             resourcesContract.mint(holder, resourceId, holderResourceAmount, "");
@@ -263,11 +263,12 @@ contract ShibaVille {
     function createShares(uint256 tokenId) public {
         require(VilleContract.ownerOf(tokenId) == msg.sender, "Sender does not own the token");
         require(!villes[tokenId].sharesIssued, "Shares already issued for this ville");
+        require(villes[tokenId].level > 9, "You have to reach level 10 before issuing shares");
 
         villes[tokenId].sharesIssued = true;
 
         // Mint 100% shares to the ville owner
-        sharesContract.mint(msg.sender, tokenId /* Share ID */, 100 /* Total shares */, "");
+        sharesContract.mint(msg.sender, tokenId /* Share ID */, 10000 /* Total shares */, "");
     }
 
     function initiateBattle(uint256 attackerVilleId, uint256 defenderVilleId, uint256[] memory attackerTroopIds, uint256[] memory attackerTroopAmounts) public authorizedOnly {

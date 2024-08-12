@@ -33,7 +33,7 @@ contract ERC721Staking {
     }
 
     mapping(uint256 => StakingInfo) public stakedBuildings;
-    mapping(uint256 => mapping(uint256 => bool)) public occupiedPositions;
+    mapping(uint256 => mapping(uint256 => uint256)) public occupiedPositions;
     mapping(uint256 => uint256[]) public villeToStakedBuildings; // Mapping to hold staked buildings for each ville
 
     IERC721 public erc721Contract;
@@ -55,11 +55,11 @@ contract ERC721Staking {
         shibaVilleContract = msg.sender;
     }
 
-    function stake(uint256 buildingId, uint256 villeId, uint256 position) external {
+    function stake(uint256 buildingId, uint256 villeId, uint256 x, uint256 y) external {
         require(stakedBuildings[buildingId].buildingId == 0, "Building is already staked");
         require(erc721Contract.ownerOf(buildingId) == msg.sender, "You do not own the building");
         require(IERC721(shibaVilleContract).ownerOf(villeId) == msg.sender, "You do not own the ville");
-        require(!occupiedPositions[villeId][position], "Position is already occupied");
+        require(occupiedPositions[villeId][x] != y, "Position is already occupied");
 
         // Get resource data from BuildingInfo contract
         IBuildingInfo.BuildingData memory buildingData = buildingInfoContract.getBuildingData(buildingId);
@@ -71,14 +71,14 @@ contract ERC721Staking {
             buildingId: buildingId,
             villeId: villeId,
             stakedAt: block.timestamp,
-            position: position
+            position: x
         });
 
         villeToStakedBuildings[villeId].push(buildingId); // Add buildingId to the ville's list of staked buildings
-        occupiedPositions[villeId][position] = true;
+        occupiedPositions[villeId][x] = y;
 
         erc721Contract.safeTransferFrom(msg.sender, address(this), buildingId);
-        emit Staked(msg.sender, buildingId, villeId, position, block.timestamp);
+        emit Staked(msg.sender, buildingId, villeId, x, block.timestamp);
     }
 
     function unstake(uint256 buildingId) external {

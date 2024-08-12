@@ -209,36 +209,39 @@ contract ShibaVille {
         }
     }
 
-    function distributeResources(uint256 tokenId, uint256 resourceId, uint256 resourceAmount, uint256 referrer) internal {
+    
+    function distributeResources(uint256 tokenId, uint256[] memory resourceId, uint256[] memory resourceAmount, uint256 referrer) internal {
         // We pay the referrer first
-        uint256 referrerShare = (resourceAmount * 5) / 100;
-        resourcesContract.mint(VilleContract.ownerOf(referrer), resourceId, referrerShare, "");
-        resourceAmount -= referrerShare;
-
+        uint256[] memory referrerShare = new uint256[](resourceId.length);
+        for (uint i = 0; i < resourceId.length; i++) {
+            uint share = (resourceAmount[i] * 5) / 100; // 5% share
+            referrerShare[i] = share;
+            resourceAmount[i] -= share;
+        }
+        resourcesContract.mintBatch(VilleContract.ownerOf(referrer), resourceId, referrerShare, "");
+        
         // Get the holders of shares for this tokenId
         address[] memory holders = sharesContract.getHolders(tokenId);
 
-        uint256 totalShares = 10000; // Total shares assumed to be 10000
-
+        // note to the reader! there is a huge room for optimization but we leave it like this for now, we will change when we optimize the whole contract
         // Calculate resource distribution
-        for (uint256 i = 0; i < holders.length; i++) {
-            address holder = holders[i];
-            uint256 holderShares = sharesContract.balanceOf(holder, tokenId);
-            uint256 sharePercentage = (holderShares * 100 ether) / totalShares;
-            uint256 holderResourceAmount = (resourceAmount * sharePercentage);
+         for (uint i = 0; i < resourceId.length; i++) {
+            for (uint h = 0; h < holders.length; h++) {
+                address holder = holders[h];
+                uint256 holderShares = sharesContract.balanceOf(holder, tokenId);
+                uint256 sharePercentage = (holderShares * 100 ether) / 10000 /*Total shares */;
+                uint256 holderResourceAmount = (resourceAmount[i] * sharePercentage);
 
-            // Mint resources to the holder
-            resourcesContract.mint(holder, resourceId, holderResourceAmount, "");
-
-            // Reduce the resource amount
-            resourceAmount -= holderResourceAmount;
-        }
+                // Mint resources to the holder
+                resourcesContract.mint(holder, resourceId[i], holderResourceAmount, "");
+            }
+         }
 
         
     }
     
 
-    function villeMint(uint256 tokenId, uint256 newExperience, uint256 energyToDeduct, uint256 x, uint256 y, uint256 buildingId, bool update, uint256 resourceId, uint256 resourceAmount) public authorizedOnly {
+    function villeMint(uint256 tokenId, uint256 newExperience, uint256 energyToDeduct, uint256 x, uint256 y, uint256 buildingId, bool update, uint256[] memory resourceIds, uint256[] memory resourceAmounts) public authorizedOnly {
         VilleInfo storage ville = villes[tokenId];
         
         // Deduct energy
@@ -250,15 +253,19 @@ contract ShibaVille {
         // Calculate resource distribution
         if (ville.occupied) {
             uint256 invaderVilleId = ville.occupiedBy;
-            uint256 invaderShare = resourceAmount / 2;
-            uint256 villeOwnerShare = resourceAmount - invaderShare;
+            uint256[] memory invaderShare = new uint256[](resourceIds.length);
+            for (uint i = 0; i < resourceIds.length; i++) {
+
+            invaderShare[i] = resourceAmounts[i] / 2;
+            resourceAmounts[i] -= invaderShare[i];
+            }
             // Mint resources to the invader ville owner
-            resourcesContract.mint(VilleContract.ownerOf(invaderVilleId), resourceId, invaderShare, "");
+            resourcesContract.mintBatch(VilleContract.ownerOf(invaderVilleId), resourceIds, invaderShare, "");
             // Distribute remaining resources
-            distributeResources(tokenId, resourceId, villeOwnerShare, ville.referrer);
+            distributeResources(tokenId, resourceIds, resourceAmounts, ville.referrer);
         } else {
             // Distribute all resources
-            distributeResources(tokenId, resourceId, resourceAmount, ville.referrer);
+            distributeResources(tokenId, resourceIds, resourceAmounts, ville.referrer);
         }
 
         // updtate land
@@ -267,7 +274,7 @@ contract ShibaVille {
         }
     }
 
-    function villeBurn(uint256 tokenId, uint256 energyToDeduct, uint256 resourceId, uint256 resourceAmount) public authorizedOnly {
+    function villeBurn(uint256 tokenId, uint256 energyToDeduct, uint256[] memory resourceId, uint256[] memory resourceAmount) public authorizedOnly {
         address villeOwner = VilleContract.ownerOf(tokenId);
         
         // Deduct energy
@@ -325,9 +332,9 @@ contract ShibaVille {
         }
 
         // Burn dead troops for both attacker and defender 
-        resourcesContract.burn(VilleContract.ownerOf(attackerVilleId), attackerTroopIds, attackerTroopsLost);
+        resourcesContract.burnBatch(VilleContract.ownerOf(attackerVilleId), attackerTroopIds, attackerTroopsLost);
         
-        resourcesContract.burn(VilleContract.ownerOf(defenderVilleId), defenderTroopIds, defenderTroopsLost);
+        resourcesContract.burnBatch(VilleContract.ownerOf(defenderVilleId), defenderTroopIds, defenderTroopsLost);
         
     }
 
@@ -344,8 +351,8 @@ contract ShibaVille {
         }
 
         // Burn dead troops for both liberator and occupying troops
-        resourcesContract.burn(VilleContract.ownerOf(occupiedVilleId), liberatorTroopIds, liberatorTroopsLost);
-        resourcesContract.burn(VilleContract.ownerOf(occupiedVilleId), occupyingTroopIds, occupyingTroopsLost);
+        resourcesContract.burnBatch(VilleContract.ownerOf(occupiedVilleId), liberatorTroopIds, liberatorTroopsLost);
+        resourcesContract.burnBatch(VilleContract.ownerOf(occupiedVilleId), occupyingTroopIds, occupyingTroopsLost);
     }
 
 }

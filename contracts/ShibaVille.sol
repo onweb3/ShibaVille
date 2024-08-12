@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.26;
 import "./Ville.sol";
 import "./Buildings.sol";
 import "./BuildingInfo.sol";

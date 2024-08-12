@@ -1,7 +1,9 @@
 body {
+  position: relative;
   margin: 0;
   height: 100%;
-  position: relative;
+  width: 100%;
+  overflow: hidden;
 }
 
 #game-left {
@@ -44,7 +46,19 @@ body {
 }
 
 #login {
-  display: none;
+  display: flex;
+  flex-direction: column;
+}
+
+#loginBtn {
+  padding-left: 20px;
+  padding-right: 20px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  border-radius: 15px;
+  border: 2px solid cyan;
+  background-color: white;
+  font-size: 18px;
 }
 
 #top-bar {
@@ -57,17 +71,32 @@ body {
 }
 
 #main {
-  display: flex;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  display: none;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(1, 1, 1, 0.5);
 }
 
 #bot-bar {
   position: absolute;
   bottom: 0;
-  right: calc(100vh / 4);
+  width: inherit;
+  display: flex;
+  justify-content: center;
+  background-color: black;
+  padding: 10px;
+}
+
+#action-grid {
   display: flex;
   gap: 10px;
-  padding: 50px;
-  background-color: white;
-  border-top-left-radius: 25px;
-  border-top-right-radius: 25px;
+}
+
+#info-field {
+  border: 3px solid cyan;
+  width: 64px;
+  height: 64px;
 }

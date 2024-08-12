@@ -7,8 +7,14 @@ interface IERC721 {
 }
 
 interface IShibaVille {
-    function villeMint(uint256 tokenId, uint256 newExperience, uint256 energyToDeduct, uint256[] memory resourceIds, uint256[] memory resourceAmounts) external;
+     struct land {
+        uint256 x;
+        uint256 y;
+        uint256 buildingId;
+    }
+    function villeMint(uint256 tokenId, uint256 newExperience, uint256 energyToDeduct, uint256 x, uint256 y, uint256 buildingId, bool update, uint256[] memory resourceIds, uint256[] memory resourceAmounts) external;
     function villeBurn(uint256 tokenId, uint256 energyToDeduct, uint256[] memory resourceIds, uint256[] memory resourceAmounts) external;
+    function getlands(uint256 tokenId) external view returns (land[][] memory);
 }
 
 interface IBuildingInfo {
@@ -29,15 +35,16 @@ contract ERC721Staking {
         uint256 buildingId;
         uint256 villeId;
         uint256 stakedAt;
-        uint256 position;
+        uint256 x;
+        uint256 y;
     }
 
     mapping(uint256 => StakingInfo) public stakedBuildings;
-    mapping(uint256 => mapping(uint256 => uint256)) public occupiedPositions;
     mapping(uint256 => uint256[]) public villeToStakedBuildings; // Mapping to hold staked buildings for each ville
 
     IERC721 public erc721Contract;
-    address public shibaVilleContract;
+    IERC721 public villeContract;
+    IShibaVille public shibaVilleContract;
     IBuildingInfo public buildingInfoContract;
     
 
@@ -49,33 +56,34 @@ contract ERC721Staking {
     event Unstaked(address indexed staker, uint256 buildingId, uint256 villeId, uint256 timestamp);
     event Claimed(address indexed staker, uint256 buildingId, uint256 villeId, uint256 timestamp);
 
-    constructor(address _erc721ContractAddress, address _buildingInfoContractAddress) {
+    constructor(address _villeContractAddress, address _erc721ContractAddress, address _buildingInfoContractAddress) {
         erc721Contract = IERC721(_erc721ContractAddress);
+        villeContract = IERC721(_villeContractAddress);
         buildingInfoContract = IBuildingInfo(_buildingInfoContractAddress);
-        shibaVilleContract = msg.sender;
+        shibaVilleContract = IShibaVille(msg.sender);
     }
 
     function stake(uint256 buildingId, uint256 villeId, uint256 x, uint256 y) external {
         require(stakedBuildings[buildingId].buildingId == 0, "Building is already staked");
         require(erc721Contract.ownerOf(buildingId) == msg.sender, "You do not own the building");
-        require(IERC721(shibaVilleContract).ownerOf(villeId) == msg.sender, "You do not own the ville");
-        require(occupiedPositions[villeId][x] != y, "Position is already occupied");
+        require(villeContract.ownerOf(villeId) == msg.sender, "You do not own the ville");
+        require(shibaVilleContract.getlands(villeId)[x][y].buildingId == 0 , "Position is already occupied");
 
         // Get resource data from BuildingInfo contract
         IBuildingInfo.BuildingData memory buildingData = buildingInfoContract.getBuildingData(buildingId);
 
         // Burn resources from ShibaVille contract
-        IShibaVille(shibaVilleContract).villeBurn(villeId, 5 /* Energy to deduct */, buildingData.inputResourceIds, buildingData.inputResourceAmounts);
+        shibaVilleContract.villeBurn(villeId, 5 /* Energy to deduct */, buildingData.inputResourceIds, buildingData.inputResourceAmounts);
 
         stakedBuildings[buildingId] = StakingInfo({
             buildingId: buildingId,
             villeId: villeId,
             stakedAt: block.timestamp,
-            position: x
+            x: x,
+            y: y
         });
 
         villeToStakedBuildings[villeId].push(buildingId); // Add buildingId to the ville's list of staked buildings
-        occupiedPositions[villeId][x] = y;
 
         erc721Contract.safeTransferFrom(msg.sender, address(this), buildingId);
         emit Staked(msg.sender, buildingId, villeId, x, block.timestamp);
@@ -85,18 +93,17 @@ contract ERC721Staking {
         StakingInfo storage stakingInfo = stakedBuildings[buildingId];
         require(stakingInfo.buildingId != 0, "Building is not staked");
         require(block.timestamp - stakingInfo.stakedAt >= MAX_STAKE_DURATION, "Building not staked for minimum duration");
-        address villeOwner = IERC721(shibaVilleContract).ownerOf(stakingInfo.villeId);
+        address villeOwner = villeContract.ownerOf(stakingInfo.villeId);
 
         // Get resource data from BuildingInfo contract
         IBuildingInfo.BuildingData memory buildingData = buildingInfoContract.getBuildingData(stakingInfo.buildingId);
 
         // Mint resources from ShibaVille contract
-        IShibaVille(shibaVilleContract).villeMint(stakingInfo.villeId, 5 * buildingData.level /* New experience */, 5 /* Energy to deduct */, buildingData.outputResourceIds, buildingData.outputResourceAmounts);
+        shibaVilleContract.villeMint(stakingInfo.villeId, 5 * buildingData.level /* New experience */, 5 /* Energy to deduct */, stakingInfo.x, stakingInfo.y, stakingInfo.buildingId, true, buildingData.outputResourceIds, buildingData.outputResourceAmounts);
 
         erc721Contract.safeTransferFrom(address(this), villeOwner, stakingInfo.buildingId);
 
         emit Unstaked(villeOwner, stakingInfo.buildingId, stakingInfo.villeId, block.timestamp);
-        delete occupiedPositions[stakingInfo.villeId][stakingInfo.position]; // Free the position
         delete stakedBuildings[stakingInfo.buildingId]; // Remove staking info
 
         // Remove buildingId from the ville's list of staked buildings
@@ -114,13 +121,13 @@ contract ERC721Staking {
         StakingInfo storage stakingInfo = stakedBuildings[buildingId];
         require(stakingInfo.buildingId != 0, "Building is not staked");
         require(block.timestamp - stakingInfo.stakedAt >= MIN_STAKE_DURATION, "Building not staked for minimum claim duration");
-        address villeOwner = IERC721(shibaVilleContract).ownerOf(stakingInfo.villeId);
+        address villeOwner = villeContract.ownerOf(stakingInfo.villeId);
 
         // Get resource data from BuildingInfo contract
         IBuildingInfo.BuildingData memory buildingData = buildingInfoContract.getBuildingData(stakingInfo.buildingId);
 
         // Mint resources from ShibaVille contract
-        IShibaVille(shibaVilleContract).villeMint(stakingInfo.villeId, 5 * buildingData.level /* New experience */, 5 /* Energy to deduct */, buildingData.outputResourceIds, buildingData.outputResourceAmounts);
+        shibaVilleContract.villeMint(stakingInfo.villeId, 5 * buildingData.level /* New experience */, 5 /* Energy to deduct */, stakingInfo.x, stakingInfo.y, stakingInfo.buildingId, false, buildingData.outputResourceIds, buildingData.outputResourceAmounts);
 
         stakingInfo.stakedAt = block.timestamp; // Reset the staking time
 

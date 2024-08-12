@@ -11,8 +11,16 @@ import "./War.sol";
 
 
 contract ShibaVille {
+
+    struct land {
+        uint256 x;
+        uint256 y;
+        uint256 buildingId;
+    }
+
     struct VilleInfo {
         string name;
+        land[][] lands;
         uint256 energy;
         uint256 lastEnergyFilled;
         uint256 referrer;
@@ -106,7 +114,17 @@ contract ShibaVille {
         return string(bLower);
     }
 
+    function initLands(uint256 size) internal pure returns (land[][] memory) {
+        land[][] memory lands = new land[][] (size);
+        for (uint x = 0; x < size; x++) {
+             for (uint y = 0; y < size; y++) {
+                land memory empty = land(x, y, 0);
+                lands[x][y] = empty;
+             }
+        }
 
+        return lands;
+    }
     function createVille(string memory villeName, uint256 referrer) public {
         require(villes[referrer].level >= 1, "The referrer has no ville");
         // Trims and convert the name to lower case for case-insensitive uniqueness
@@ -117,9 +135,10 @@ contract ShibaVille {
         require(!villeNames[lowerCaseName], "Ville name must be unique");
 
         uint256 tokenId = VilleContract.safeMint(msg.sender);
-
+        land[][] memory emptyLands = initLands(10);
         villes[tokenId] = VilleInfo({
             name: villeName,
+            lands: emptyLands,
             energy: 100,
             lastEnergyFilled: block.timestamp,
             referrer: referrer,
@@ -138,6 +157,10 @@ contract ShibaVille {
 
     function getVille(uint256 tokenId) public view returns (VilleInfo memory) {
         return villes[tokenId];
+    }
+
+    function getlands(uint256 tokenId) public view returns (land[][] memory) {
+        return villes[tokenId].lands;
     }
 
     function doesVilleNameExist(string memory villeName) public view returns (bool) {
@@ -186,7 +209,7 @@ contract ShibaVille {
         }
     }
 
-    function distributeResources(uint256 tokenId, uint256 resourceId, uint256 resourceAmount, uint256 referrer) public authorizedOnly {
+    function distributeResources(uint256 tokenId, uint256 resourceId, uint256 resourceAmount, uint256 referrer) internal {
         // We pay the referrer first
         uint256 referrerShare = (resourceAmount * 5) / 100;
         resourcesContract.mint(VilleContract.ownerOf(referrer), resourceId, referrerShare, "");
@@ -215,7 +238,7 @@ contract ShibaVille {
     }
     
 
-    function villeMint(uint256 tokenId, uint256 newExperience, uint256 energyToDeduct, uint256 resourceId, uint256 resourceAmount) public authorizedOnly {
+    function villeMint(uint256 tokenId, uint256 newExperience, uint256 energyToDeduct, uint256 x, uint256 y, uint256 buildingId, bool update, uint256 resourceId, uint256 resourceAmount) public authorizedOnly {
         VilleInfo storage ville = villes[tokenId];
         
         // Deduct energy
@@ -237,6 +260,21 @@ contract ShibaVille {
             // Distribute all resources
             distributeResources(tokenId, resourceId, resourceAmount, ville.referrer);
         }
+
+        // updtate land
+        if (update) {
+            ville.lands[x][y] = land(x, y, buildingId);
+        }
+    }
+
+    function villeBurn(uint256 tokenId, uint256 energyToDeduct, uint256 resourceId, uint256 resourceAmount) public authorizedOnly {
+        address villeOwner = VilleContract.ownerOf(tokenId);
+        
+        // Deduct energy
+        updateVilleEnergy(tokenId, energyToDeduct);
+        
+        resourcesContract.burnBatch(villeOwner, resourceId, resourceAmount);
+
     }
 
     function createBuildingType(string memory name,

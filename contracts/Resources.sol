@@ -23,7 +23,7 @@ contract Resources is ERC1155 {
         _mintBatch(to, ids, amounts, data);
     }
 
-    function burn(address from, uint256[] memory ids, uint256[] memory values) external onlyShibavilleContract {
+    function burnBatch(address from, uint256[] memory ids, uint256[] memory values) external onlyShibavilleContract {
         _burnBatch(from, ids, values);
     }
 

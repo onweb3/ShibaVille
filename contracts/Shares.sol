@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 contract Shares is ERC1155 {
     address public shibavilleContract;
 
+    
     // Mapping to keep track of holders for each tokenId
     mapping(uint256 => address[]) private tokenHolders;
     mapping(uint256 => mapping(address => bool)) private holderExists;
@@ -26,8 +27,14 @@ contract Shares is ERC1155 {
     }
 
 
-    function getHolders(uint256 tokenId) public view returns (address[] memory) {
-        return tokenHolders[tokenId];
+    function getHolders(uint256 tokenId) public view returns (address[] memory, uint256[] memory) {
+        address[] memory addresses = tokenHolders[tokenId];
+        uint256[] memory balances = new uint256[](addresses.length);
+        
+        for (uint i = 0; i < addresses.length; i++) {
+            balances[i] = balanceOf(addresses[i], tokenId);
+        }
+        return (addresses, balances);
     }
 
     function _addHolder(uint256 tokenId, address holder) internal {

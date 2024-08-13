@@ -8,7 +8,12 @@ import "./Resources.sol";
 import "./Shares.sol";
 import "./War.sol";
 
-
+interface IShares {
+     struct holderBalance {
+        address holder;
+        uint256 balance;
+    }
+}
 
 contract ShibaVille {
 
@@ -210,34 +215,37 @@ contract ShibaVille {
     }
 
     
-    function distributeResources(uint256 tokenId, uint256[] memory resourceId, uint256[] memory resourceAmount, uint256 referrer) internal {
+    function distributeResources(uint256 tokenId, uint256[] memory resourceIds, uint256[] memory resourceAmounts, uint256 referrer) internal {
         // We pay the referrer first
-        uint256[] memory referrerShare = new uint256[](resourceId.length);
-        for (uint i = 0; i < resourceId.length; i++) {
-            uint share = (resourceAmount[i] * 5) / 100; // 5% share
+        uint256[] memory referrerShare = new uint256[](resourceIds.length);
+        for (uint i = 0; i < resourceIds.length; i++) {
+            uint share = (resourceAmounts[i] * 5) / 100; // 5% share
             referrerShare[i] = share;
-            resourceAmount[i] -= share;
+            resourceAmounts[i] -= share;
         }
-        resourcesContract.mintBatch(VilleContract.ownerOf(referrer), resourceId, referrerShare, "");
+        resourcesContract.mintBatch(VilleContract.ownerOf(referrer), resourceIds, referrerShare, "");
         
         // Get the holders of shares for this tokenId
-        address[] memory holders = sharesContract.getHolders(tokenId);
-
+        (address[] memory holders, uint256[] memory balances) = sharesContract.getHolders(tokenId);
+        
         // note to the reader! there is a huge room for optimization but we leave it like this for now, we will change when we optimize the whole contract
         // Calculate resource distribution
-         for (uint i = 0; i < resourceId.length; i++) {
-            for (uint h = 0; h < holders.length; h++) {
-                address holder = holders[h];
-                uint256 holderShares = sharesContract.balanceOf(holder, tokenId);
-                uint256 sharePercentage = (holderShares * 100 ether) / 10000 /*Total shares */;
-                uint256 holderResourceAmount = (resourceAmount[i] * sharePercentage);
-
-                // Mint resources to the holder
-                resourcesContract.mint(holder, resourceId[i], holderResourceAmount, "");
+         
+        for (uint h = 0; h < holders.length; h++) {
+            uint256[] memory holderResourceAmount = new uint256[] (resourceIds.length);
+            for (uint i = 0; i < resourceIds.length; i++) {
+                uint256 sharePercentage = (balances[h] * 100 ether) / 10000 /*Total shares */;
+                holderResourceAmount[h] = ((resourceAmounts[i] / 5) * sharePercentage); // 20% for share holders
             }
+            // Mint resources to the holder
+            resourcesContract.mintBatch(holders[h], resourceIds, holderResourceAmount, "");
          }
 
-        
+        // Mint 80% to ville owner
+        for (uint i = 0; i < resourceIds.length; i++) {
+            resourceAmounts[i] -= resourceAmounts[i] / 5;
+        }
+        resourcesContract.mintBatch(VilleContract.ownerOf(tokenId), resourceIds, resourceAmounts, "");
     }
     
 
@@ -261,12 +269,9 @@ contract ShibaVille {
             }
             // Mint resources to the invader ville owner
             resourcesContract.mintBatch(VilleContract.ownerOf(invaderVilleId), resourceIds, invaderShare, "");
-            // Distribute remaining resources
-            distributeResources(tokenId, resourceIds, resourceAmounts, ville.referrer);
-        } else {
-            // Distribute all resources
-            distributeResources(tokenId, resourceIds, resourceAmounts, ville.referrer);
-        }
+        } 
+        // Distribute remaining resources
+        distributeResources(tokenId, resourceIds, resourceAmounts, ville.referrer);
 
         // updtate land
         if (update) {

@@ -25,6 +25,7 @@ In Shibaville, players immerse themselves in building, resource management, and 
    - **Ville NFT**: This NFT represents the player’s ville, including level, rank, unique name, and dynamic attributes.
    - **Building NFTs**: Each building is represented as an NFT with unique traits that impact resource production and strategy.
    - **Placement**: Players strategically place buildings in their ville, influencing resource management and gameplay strategy.
+   - **Shares**: Manages ville shares as token that can be transfered to other wallets.
 
 3. **Resource Management**
 
@@ -44,18 +45,26 @@ In Shibaville, players immerse themselves in building, resource management, and 
 
 ### Smart Contract Architecture
 
-- **Main Contract**
+- **Main Contract (Game mode)**
   - **Handles**: Player registration, building minting, resource management, and placements.
-  - **Integration**: Interfaces with BSC's standards for NFTs and multi-token contracts, managing resources and units.
-- **Ville Contract (BEP-721 with Metadata)**
-  - **Metadata**: On-chain metadata for ville NFTs, representing the player’s ville and state.
+  - **Integration**: Interfaces with BSC's standards for NFTs and multi-token contracts, managing resources, shares and units.
+  - **Ville Metadata**: On-chain metadata for ville NFTs, representing the player’s ville and state.
+  - **Interaction**: This contract is responsable for all interactions of the game, from creating a ville to invade others.
+- **Ville Contract (BEP-721)**
   - **Transfer Logic**: Ensures buildings follow the ville NFT upon transfer.
-- **Building Contract (BEP-721 with Metadata)**
+- **Building Contract (BEP-721)**
+  - **Transfer Logic**: Ensures buildings follow the ville NFT upon transfer.
+- **BuildingInfo (Metadata)**
   - **Unique Traits**: Each building NFT has unique attributes that affect gameplay.
-  - **Interaction**: Resources are burned to mint and place buildings.
 - **Multi-Token Contract for Resources and Units**
   - **BEP-1155**: Manages multiple resource types and army units.
   - **Scalability**: Allows adding new resource and unit types without redeploying contracts.
+- **Ville Shares Contract (BEP-1155)**
+  - **Shares**: Manages ville shares as token that ville owner can transfer to other wallets.
+  - **Funding**: User can get funded to keep playing by selling 20% of the ville to investors.
+- **War Contract (Game Mechanics)**
+  - **Invade**: Use units to invade other villes and collect a 50% tax from all the resources collected.
+  - **Gun for hire**: Player can use units to defende clients in exchange of one time payment.
 
 ### Conclusion
 
@@ -67,5 +76,8 @@ By building on OPBNB and fostering an open-source community, Shibaville is poise
 
 ### Links
 
-Website: https://shibaville.io
-x: https://x.com/ShibaVille_io
+## Website: https://shibaville.io
+
+## x: https://x.com/ShibaVille_io
+
+---

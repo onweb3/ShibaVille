@@ -8,12 +8,6 @@ import "./Resources.sol";
 import "./Shares.sol";
 import "./War.sol";
 
-interface IShares {
-     struct holderBalance {
-        address holder;
-        uint256 balance;
-    }
-}
 
 contract ShibaVille {
 

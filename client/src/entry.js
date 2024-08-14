@@ -2,11 +2,11 @@ import { metamaskAuth } from "./auth.js";
 import { createScene } from "./main.js";
 import { createVille } from "./ville.js";
 
-export function createGame() {
-  const mmSdk = metamaskAuth();
-  if (!mmSdk.connectedAccount) {
-    mmSdk.connect();
-  }
+function createGame() {
+  // const mmSdk = metamaskAuth();
+  // if (!mmSdk.connectedAccount) {
+  //   mmSdk.connect();
+  // }
 
   const scene = createScene(window);
   const ville = createVille();
@@ -38,3 +38,5 @@ export function createGame() {
 
   return gameUpdater;
 }
+
+createGame();

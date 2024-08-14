@@ -38,5 +38,6 @@ function createGame() {
 
   return gameUpdater;
 }
-
-createGame();
+window.onload = () => {
+  createGame();
+};

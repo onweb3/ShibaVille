@@ -3,23 +3,24 @@ pragma solidity ^0.8.26;
 import "./Ville.sol";
 import "./Buildings.sol";
 import "./BuildingInfo.sol";
-import "./BuildingStaking.sol";
 import "./Resources.sol";
 import "./Shares.sol";
 import "./War.sol";
+import "./SVGold.sol";
 
 
 contract ShibaVille {
 
-    struct land {
+    struct Land {
         uint256 x;
         uint256 y;
         uint256 buildingId;
+        uint256 stakedAt;
     }
 
     struct VilleInfo {
         string name;
-        land[][] lands;
+        Land[16][16] grid;
         uint256 energy;
         uint256 lastEnergyFilled;
         uint256 referrer;
@@ -36,47 +37,36 @@ contract ShibaVille {
     Resources public resourcesContract;
     Shares public sharesContract;
     War public warContract;
+    SVGold public goldContract;
+
     mapping(uint256 => VilleInfo) public villes;
     mapping(string => bool) private villeNames;
+    
 
     address public dev;
-    address[] public authorizedContracts;
 
     // Constant for base energy cap
     uint256 public constant BASE_ENERGY_CAP = 95;
+    // Staking constants
+    uint256 public constant MAX_STAKE_DURATION = 24 hours;
+    uint256 public constant MIN_STAKE_DURATION = 1 hours;
+
+    //Events
+    event Staked(address indexed staker, uint256 buildingId, uint256 villeId, uint256 position, uint256 timestamp);
+    event Unstaked(address indexed staker, uint256 buildingId, uint256 villeId, uint256 timestamp);
+    event Claimed(address indexed staker, uint256 buildingId, uint256 villeId, uint256 timestamp);
 
     constructor(string memory Ville_URI, string memory Buildings_URI, string memory Resources_URI, string memory Shares_URI) {
         VilleContract = new Ville(Ville_URI);
-        addAuthorizedContract(address(VilleContract));
         buildingsContract = new Buildings(Buildings_URI);
         buildingInfoContract = new BuildingInfo();
         resourcesContract = new Resources(Resources_URI);
         sharesContract = new Shares(Shares_URI);
         warContract = War(address(resourcesContract));
+        goldContract = new SVGold();
         dev = msg.sender;
     }
-
    
-    modifier authorizedOnly() {
-        bool isAuthorized = false;
-        for (uint i = 0; i < authorizedContracts.length; i++) {
-            if (authorizedContracts[i] == msg.sender) {
-                isAuthorized = true;
-                break;
-            }
-        }
-        require(isAuthorized, "Caller is not authorized");
-        _;
-    }
-
-    modifier onlyDev() {
-        require(msg.sender == dev, "Caller is not the dev!");
-        _;
-    }
-
-    function addAuthorizedContract(address _contract) internal {
-        authorizedContracts.push(_contract);
-    }
 
     function trim(string memory str) internal pure returns (string memory) {
         bytes memory strBytes = bytes(str);
@@ -113,11 +103,11 @@ contract ShibaVille {
         return string(bLower);
     }
 
-    function initLands(uint256 size) internal pure returns (land[][] memory) {
-        land[][] memory lands = new land[][] (size);
+    function initLands(uint256 size) internal pure returns (Land[16][16] memory) {
+        Land[16][16] memory lands;
         for (uint x = 0; x < size; x++) {
              for (uint y = 0; y < size; y++) {
-                land memory empty = land(x, y, 0);
+                Land memory empty = Land(x, y, 0, 0);
                 lands[x][y] = empty;
              }
         }
@@ -134,10 +124,10 @@ contract ShibaVille {
         require(!villeNames[lowerCaseName], "Ville name must be unique");
 
         uint256 tokenId = VilleContract.safeMint(msg.sender);
-        land[][] memory emptyLands = initLands(10);
+        Land[16][16] memory emptyLands = initLands(16);
         villes[tokenId] = VilleInfo({
             name: villeName,
-            lands: emptyLands,
+            grid: emptyLands,
             energy: 100,
             lastEnergyFilled: block.timestamp,
             referrer: referrer,
@@ -158,8 +148,8 @@ contract ShibaVille {
         return villes[tokenId];
     }
 
-    function getlands(uint256 tokenId) public view returns (land[][] memory) {
-        return villes[tokenId].lands;
+    function getlands(uint256 tokenId) public view returns (Land[16][16] memory) {
+        return villes[tokenId].grid;
     }
 
     function doesVilleNameExist(string memory villeName) public view returns (bool) {
@@ -185,7 +175,7 @@ contract ShibaVille {
         return BASE_ENERGY_CAP + (level * 5);
     }
 
-    function updateVilleEnergy(uint256 tokenId, uint256 amountToDeduct) public authorizedOnly {
+    function updateVilleEnergy(uint256 tokenId, uint256 amountToDeduct) internal {
         VilleInfo storage ville = villes[tokenId];
         uint256 currentEnergy = getVilleEnergy(tokenId);
 
@@ -243,7 +233,7 @@ contract ShibaVille {
     }
     
 
-    function villeMint(uint256 tokenId, uint256 newExperience, uint256 energyToDeduct, uint256 x, uint256 y, uint256 buildingId, bool update, uint256[] memory resourceIds, uint256[] memory resourceAmounts) public authorizedOnly {
+    function villeMint(uint256 tokenId, uint256 newExperience, uint256 energyToDeduct, uint256[] memory resourceIds, uint256[] memory resourceAmounts) internal {
         VilleInfo storage ville = villes[tokenId];
         
         // Deduct energy
@@ -267,13 +257,9 @@ contract ShibaVille {
         // Distribute remaining resources
         distributeResources(tokenId, resourceIds, resourceAmounts, ville.referrer);
 
-        // updtate land
-        if (update) {
-            ville.lands[x][y] = land(x, y, buildingId);
-        }
     }
 
-    function villeBurn(uint256 tokenId, uint256 energyToDeduct, uint256[] memory resourceId, uint256[] memory resourceAmount) public authorizedOnly {
+    function villeBurn(uint256 tokenId, uint256 energyToDeduct, uint256[] memory resourceId, uint256[] memory resourceAmount) internal {
         address villeOwner = VilleContract.ownerOf(tokenId);
         
         // Deduct energy
@@ -281,6 +267,12 @@ contract ShibaVille {
         
         resourcesContract.burnBatch(villeOwner, resourceId, resourceAmount);
 
+    }
+
+    // DEV related functions
+    modifier onlyDev() {
+        require(msg.sender == dev, "Caller is not the dev!");
+        _;
     }
 
     function createBuildingType(string memory name,
@@ -293,6 +285,8 @@ contract ShibaVille {
 
         return typeId;
     }
+    // DEV related functions
+
 
     function createBuilding(uint256 buildingType, uint256 theme, address to) external returns (uint256) {
         // Mint the ERC721 token and get the new tokenId
@@ -302,6 +296,65 @@ contract ShibaVille {
         buildingInfoContract.setBuildingData(tokenId, buildingType, theme);
 
         return tokenId;
+    }
+
+    function stake(uint256 buildingId, uint256 villeId, uint256 x, uint256 y) external {
+        require(buildingsContract.ownerOf(buildingId) == msg.sender, "You do not own the building");
+        require(VilleContract.ownerOf(villeId) == msg.sender, "You do not own the ville");
+        require(villes[villeId].grid[x][y].buildingId == 0 , "This land is already occupied");
+
+        // Get resource data from BuildingInfo contract
+        BuildingInfo.BuildingData memory buildingData = buildingInfoContract.getBuildingData(buildingId);
+
+        // Burn resources from ShibaVille contract
+        villeBurn(villeId, 5, buildingData.inputResourceIds, buildingData.inputResourceAmounts);
+        // Transfer the building to shibaville
+        buildingsContract.safeTransferFrom(msg.sender, address(this), buildingId);
+        // Update the Land
+        Land memory target = villes[villeId].grid[x][y];
+        target.buildingId = buildingId;
+        target.stakedAt = block.timestamp;
+
+        emit Staked(msg.sender, buildingId, villeId, x, block.timestamp);
+    }
+
+    function unstake(uint256 buildingId, uint256 villeId, uint256 x, uint256 y) external {
+        require(buildingsContract.ownerOf(buildingId) == msg.sender, "You do not own the building");
+        require(VilleContract.ownerOf(villeId) == msg.sender, "You do not own the ville");
+        Land storage LandInfo = villes[villeId].grid[x][y];
+        require(LandInfo.buildingId == buildingId, "Building is not staked");
+        require(block.timestamp - LandInfo.stakedAt >= MIN_STAKE_DURATION, "Building not staked for minimum duration");
+        address villeOwner = msg.sender;
+
+        // Get resource data from BuildingInfo contract
+        BuildingInfo.BuildingData memory buildingData = buildingInfoContract.getBuildingData(LandInfo.buildingId);
+
+        // Mint resources from ShibaVille contract
+        villeMint(villeId, 5 * buildingData.level /* New experience */, 5 /* Energy to deduct */, buildingData.outputResourceIds, buildingData.outputResourceAmounts);
+
+        VilleContract.safeTransferFrom(address(this), villeOwner, LandInfo.buildingId);
+
+        emit Unstaked(villeOwner, LandInfo.buildingId, villeId, block.timestamp);
+        LandInfo.buildingId = 0; // Remove staking info
+        LandInfo.stakedAt = 0; // Remove staking info
+    }
+
+    function claim(uint256 buildingId, uint256 villeId, uint256 x, uint256 y) external {
+        require(VilleContract.ownerOf(villeId) == msg.sender, "You do not own the ville");
+        Land storage LandInfo = villes[villeId].grid[x][y];
+        require(LandInfo.buildingId == buildingId, "Building is not staked");
+        require(block.timestamp - LandInfo.stakedAt >= MIN_STAKE_DURATION, "Building not staked for minimum claim duration");
+        address villeOwner = msg.sender;
+
+        // Get resource data from BuildingInfo contract
+        BuildingInfo.BuildingData memory buildingData = buildingInfoContract.getBuildingData(LandInfo.buildingId);
+
+        // Mint resources
+        villeMint(villeId, 5 * buildingData.level /* New experience */, 1 /* Energy to deduct */, buildingData.outputResourceIds, buildingData.outputResourceAmounts);
+
+        LandInfo.stakedAt = block.timestamp; // Reset the staking time
+
+        emit Claimed(villeOwner, LandInfo.buildingId, villeId, block.timestamp);
     }
 
     function createShares(uint256 tokenId) public {
@@ -315,14 +368,14 @@ contract ShibaVille {
         sharesContract.mint(msg.sender, tokenId /* Share ID */, 10000 /* Total shares */, "");
     }
 
-    function initiateBattle(uint256 attackerVilleId, uint256 defenderVilleId, uint256[] memory attackerTroopIds, uint256[] memory attackerTroopAmounts) public authorizedOnly {
+    function initiateBattle(uint256 attackerVilleId, uint256 defenderVilleId, uint256[] memory attackerTroopIds, uint256[] memory attackerTroopAmounts) internal {
         require(!villes[attackerVilleId].occupied, "Attacker ville is occupied");
         require(!villes[defenderVilleId].occupied, "Defender ville is already occupied");
 
         warContract.initiateBattle(attackerVilleId, attackerTroopIds, attackerTroopAmounts, defenderVilleId);
     }
 
-    function finalizeBattle(uint256 attackerVilleId, uint256 defenderVilleId, bool attackerWon, uint256[] memory attackerTroopIds, uint256[] memory attackerTroopsLost, uint256[] memory defenderTroopIds, uint256[] memory defenderTroopsLost) public authorizedOnly {
+    function finalizeBattle(uint256 attackerVilleId, uint256 defenderVilleId, bool attackerWon, uint256[] memory attackerTroopIds, uint256[] memory attackerTroopsLost, uint256[] memory defenderTroopIds, uint256[] memory defenderTroopsLost) internal {
         if (attackerWon) {
             villes[defenderVilleId].occupied = true;
             villes[defenderVilleId].occupiedBy = attackerVilleId;
@@ -337,13 +390,13 @@ contract ShibaVille {
         
     }
 
-    function liberateVille(uint256 occupiedVilleId, uint256[] memory liberatorTroopIds, uint256[] memory liberatorTroopAmounts) public authorizedOnly {
+    function liberateVille(uint256 occupiedVilleId, uint256[] memory liberatorTroopIds, uint256[] memory liberatorTroopAmounts) internal {
         require(villes[occupiedVilleId].occupied, "Ville is not occupied");
 
         warContract.liberateVille(occupiedVilleId, liberatorTroopIds, liberatorTroopAmounts);
     }
 
-    function finalizeLiberation(uint256 occupiedVilleId, bool liberatorWon, uint256[] memory liberatorTroopIds, uint256[] memory liberatorTroopsLost, uint256[] memory occupyingTroopIds, uint256[] memory occupyingTroopsLost) public authorizedOnly {
+    function finalizeLiberation(uint256 occupiedVilleId, bool liberatorWon, uint256[] memory liberatorTroopIds, uint256[] memory liberatorTroopsLost, uint256[] memory occupyingTroopIds, uint256[] memory occupyingTroopsLost) internal {
         if (liberatorWon) {
             villes[occupiedVilleId].occupied = false;
             villes[occupiedVilleId].occupiedBy = 0;

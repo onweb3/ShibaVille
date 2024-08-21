@@ -45,11 +45,13 @@ contract ShibaVille {
 
     address public dev;
 
-    // Constant for base energy cap
+    
+    // Constants
     uint256 public constant BASE_ENERGY_CAP = 95;
-    // Staking constants
     uint256 public constant MAX_STAKE_DURATION = 24 hours;
     uint256 public constant MIN_STAKE_DURATION = 1 hours;
+    uint256 public constant BASE_EXP = 5;
+
 
     //Events
     event Staked(address indexed staker, uint256 buildingId, uint256 villeId, uint256 position, uint256 timestamp);
@@ -68,52 +70,6 @@ contract ShibaVille {
     }
    
 
-    function trim(string memory str) internal pure returns (string memory) {
-        bytes memory strBytes = bytes(str);
-        uint256 start = 0;
-        uint256 end = strBytes.length;
-
-        while (start < end && strBytes[start] == 0x20) {
-            start++;
-        }
-        while (end > start && strBytes[end - 1] == 0x20) {
-            end--;
-        }
-
-        bytes memory trimmedBytes = new bytes(end - start);
-        for (uint256 i = start; i < end; i++) {
-            trimmedBytes[i - start] = strBytes[i];
-        }
-
-        return string(trimmedBytes);
-    }
-
-    function toLowerCase(string memory str) internal pure returns (string memory) {
-        bytes memory bStr = bytes(str);
-        bytes memory bLower = new bytes(bStr.length);
-        for (uint i = 0; i < bStr.length; i++) {
-            // Uppercase characters are in the range 0x41 ('A') to 0x5A ('Z')
-            if ((uint8(bStr[i]) >= 65) && (uint8(bStr[i]) <= 90)) {
-                // Convert to lowercase by adding 32 to the ASCII value
-                bLower[i] = bytes1(uint8(bStr[i]) + 32);
-            } else {
-                bLower[i] = bStr[i];
-            }
-        }
-        return string(bLower);
-    }
-
-    function initLands(uint256 size) internal pure returns (Land[16][16] memory) {
-        Land[16][16] memory lands;
-        for (uint x = 0; x < size; x++) {
-             for (uint y = 0; y < size; y++) {
-                Land memory empty = Land(x, y, 0, 0);
-                lands[x][y] = empty;
-             }
-        }
-
-        return lands;
-    }
     function createVille(string memory villeName, uint256 referrer) public {
         require(villes[referrer].level >= 1, "The referrer has no ville");
         // Trims and convert the name to lower case for case-insensitive uniqueness
@@ -157,7 +113,7 @@ contract ShibaVille {
     }
 
     function getVilleEnergy(uint256 tokenId) public view returns (uint256) {
-        VilleInfo storage ville = villes[tokenId];
+        VilleInfo memory ville = villes[tokenId];
         uint256 currentTime = block.timestamp;
         uint256 timeElapsed = currentTime - ville.lastEnergyFilled;
         uint256 hoursElapsed = timeElapsed / 1 hours;
@@ -225,19 +181,17 @@ contract ShibaVille {
             resourcesContract.mintBatch(holders[h], resourceIds, holderResourceAmount, "");
          }
 
-        // Mint 80% to ville owner
+        // Remove 20% of the share holders
         for (uint i = 0; i < resourceIds.length; i++) {
             resourceAmounts[i] -= resourceAmounts[i] / 5;
         }
+        // Mint 80% to ville owner
         resourcesContract.mintBatch(VilleContract.ownerOf(tokenId), resourceIds, resourceAmounts, "");
     }
     
 
-    function villeMint(uint256 tokenId, uint256 newExperience, uint256 energyToDeduct, uint256[] memory resourceIds, uint256[] memory resourceAmounts) internal {
+    function villeMint(uint256 tokenId, uint256 newExperience, uint256[] memory resourceIds, uint256[] memory resourceAmounts) internal {
         VilleInfo storage ville = villes[tokenId];
-        
-        // Deduct energy
-        updateVilleEnergy(tokenId, energyToDeduct);
         
         // Update experience
         (ville.level, ville.experience) = calculateLevel(ville.level, ville.experience, newExperience);
@@ -279,9 +233,10 @@ contract ShibaVille {
          uint256[] memory inputResourceIds,
          uint256[] memory inputResourceAmounts,
          uint256[] memory outputResourceIds,
-         uint256[] memory outputResourceAmounts) external onlyDev returns (uint256) {
+         uint256[] memory outputResourceAmounts,
+         uint256 energyCost) external onlyDev returns (uint256) {
 
-        uint typeId = buildingInfoContract.addNewType(name, inputResourceIds, inputResourceAmounts, outputResourceIds, outputResourceAmounts);
+        uint typeId = buildingInfoContract.addNewType(name, inputResourceIds, inputResourceAmounts, outputResourceIds, outputResourceAmounts, energyCost);
 
         return typeId;
     }
@@ -305,9 +260,10 @@ contract ShibaVille {
 
         // Get resource data from BuildingInfo contract
         BuildingInfo.BuildingData memory buildingData = buildingInfoContract.getBuildingData(buildingId);
-
+        // Deduct energy
+        updateVilleEnergy(villeId, buildingData.data.energyCost * 5);
         // Burn resources from ShibaVille contract
-        villeBurn(villeId, 5, buildingData.inputResourceIds, buildingData.inputResourceAmounts);
+        villeBurn(villeId, 5, buildingData.data.inputResourceIds, buildingData.data.inputResourceAmounts);
         // Transfer the building to shibaville
         buildingsContract.safeTransferFrom(msg.sender, address(this), buildingId);
         // Update the Land
@@ -328,9 +284,11 @@ contract ShibaVille {
 
         // Get resource data from BuildingInfo contract
         BuildingInfo.BuildingData memory buildingData = buildingInfoContract.getBuildingData(LandInfo.buildingId);
-
+        // Deduct energy
+        updateVilleEnergy(villeId, buildingData.data.energyCost * 5);
+       
         // Mint resources from ShibaVille contract
-        villeMint(villeId, 5 * buildingData.level /* New experience */, 5 /* Energy to deduct */, buildingData.outputResourceIds, buildingData.outputResourceAmounts);
+        villeMint(villeId, BASE_EXP * buildingData.level, buildingData.data.outputResourceIds, buildingData.data.outputResourceAmounts);
 
         VilleContract.safeTransferFrom(address(this), villeOwner, LandInfo.buildingId);
 
@@ -349,8 +307,10 @@ contract ShibaVille {
         // Get resource data from BuildingInfo contract
         BuildingInfo.BuildingData memory buildingData = buildingInfoContract.getBuildingData(LandInfo.buildingId);
 
+        // Deduct energy
+        updateVilleEnergy(villeId, buildingData.data.energyCost);
         // Mint resources
-        villeMint(villeId, 5 * buildingData.level /* New experience */, 1 /* Energy to deduct */, buildingData.outputResourceIds, buildingData.outputResourceAmounts);
+        villeMint(villeId, 5 * buildingData.level, buildingData.data.outputResourceIds, buildingData.data.outputResourceAmounts);
 
         LandInfo.stakedAt = block.timestamp; // Reset the staking time
 
@@ -405,6 +365,64 @@ contract ShibaVille {
         // Burn dead troops for both liberator and occupying troops
         resourcesContract.burnBatch(VilleContract.ownerOf(occupiedVilleId), liberatorTroopIds, liberatorTroopsLost);
         resourcesContract.burnBatch(VilleContract.ownerOf(occupiedVilleId), occupyingTroopIds, occupyingTroopsLost);
+    }
+
+
+
+
+
+
+
+
+
+
+
+    // Utils
+        function trim(string memory str) internal pure returns (string memory) {
+        bytes memory strBytes = bytes(str);
+        uint256 start = 0;
+        uint256 end = strBytes.length;
+
+        while (start < end && strBytes[start] == 0x20) {
+            start++;
+        }
+        while (end > start && strBytes[end - 1] == 0x20) {
+            end--;
+        }
+
+        bytes memory trimmedBytes = new bytes(end - start);
+        for (uint256 i = start; i < end; i++) {
+            trimmedBytes[i - start] = strBytes[i];
+        }
+
+        return string(trimmedBytes);
+    }
+
+    function toLowerCase(string memory str) internal pure returns (string memory) {
+        bytes memory bStr = bytes(str);
+        bytes memory bLower = new bytes(bStr.length);
+        for (uint i = 0; i < bStr.length; i++) {
+            // Uppercase characters are in the range 0x41 ('A') to 0x5A ('Z')
+            if ((uint8(bStr[i]) >= 65) && (uint8(bStr[i]) <= 90)) {
+                // Convert to lowercase by adding 32 to the ASCII value
+                bLower[i] = bytes1(uint8(bStr[i]) + 32);
+            } else {
+                bLower[i] = bStr[i];
+            }
+        }
+        return string(bLower);
+    }
+
+    function initLands(uint256 size) internal pure returns (Land[16][16] memory) {
+        Land[16][16] memory lands;
+        for (uint x = 0; x < size; x++) {
+             for (uint y = 0; y < size; y++) {
+                Land memory empty = Land(x, y, 0, 0);
+                lands[x][y] = empty;
+             }
+        }
+
+        return lands;
     }
 
 }

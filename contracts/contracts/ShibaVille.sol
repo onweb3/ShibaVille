@@ -12,15 +12,12 @@ import "./SVGold.sol";
 contract ShibaVille {
 
     struct Land {
-        uint256 x;
-        uint256 y;
         uint256 buildingId;
         uint256 stakedAt;
     }
 
     struct VilleInfo {
         string name;
-        Land[16][16] grid;
         uint256 energy;
         uint256 lastEnergyFilled;
         uint256 referrer;
@@ -40,6 +37,7 @@ contract ShibaVille {
     SVGold public goldContract;
 
     mapping(uint256 => VilleInfo) public villes;
+    mapping(uint256 => Land[16][16]) public grid;
     mapping(string => bool) private villeNames;
     
 
@@ -80,10 +78,8 @@ contract ShibaVille {
         require(!villeNames[lowerCaseName], "Ville name must be unique");
 
         uint256 tokenId = VilleContract.safeMint(msg.sender);
-        Land[16][16] memory emptyLands = initLands(16);
         villes[tokenId] = VilleInfo({
             name: villeName,
-            grid: emptyLands,
             energy: 100,
             lastEnergyFilled: block.timestamp,
             referrer: referrer,
@@ -95,7 +91,7 @@ contract ShibaVille {
         });
 
         villeNames[lowerCaseName] = true;
-
+        
         // Mint initial resources to the ville owner
         resourcesContract.mint(msg.sender, 0 /* Resource ID 0 Basic building materials(BBM) */, 100, "");
     }
@@ -105,7 +101,7 @@ contract ShibaVille {
     }
 
     function getlands(uint256 tokenId) public view returns (Land[16][16] memory) {
-        return villes[tokenId].grid;
+        return grid[tokenId];
     }
 
     function doesVilleNameExist(string memory villeName) public view returns (bool) {
@@ -256,7 +252,7 @@ contract ShibaVille {
     function stake(uint256 buildingId, uint256 villeId, uint256 x, uint256 y) external {
         require(buildingsContract.ownerOf(buildingId) == msg.sender, "You do not own the building");
         require(VilleContract.ownerOf(villeId) == msg.sender, "You do not own the ville");
-        require(villes[villeId].grid[x][y].buildingId == 0 , "This land is already occupied");
+        require(grid[villeId][x][y].buildingId == 0 , "This land is already occupied");
 
         // Get resource data from BuildingInfo contract
         BuildingInfo.BuildingData memory buildingData = buildingInfoContract.getBuildingData(buildingId);
@@ -267,7 +263,7 @@ contract ShibaVille {
         // Transfer the building to shibaville
         buildingsContract.safeTransferFrom(msg.sender, address(this), buildingId);
         // Update the Land
-        Land memory target = villes[villeId].grid[x][y];
+        Land memory target = grid[villeId][x][y];
         target.buildingId = buildingId;
         target.stakedAt = block.timestamp;
 
@@ -277,7 +273,7 @@ contract ShibaVille {
     function unstake(uint256 buildingId, uint256 villeId, uint256 x, uint256 y) external {
         require(buildingsContract.ownerOf(buildingId) == msg.sender, "You do not own the building");
         require(VilleContract.ownerOf(villeId) == msg.sender, "You do not own the ville");
-        Land storage LandInfo = villes[villeId].grid[x][y];
+        Land storage LandInfo = grid[villeId][x][y];
         require(LandInfo.buildingId == buildingId, "Building is not staked");
         require(block.timestamp - LandInfo.stakedAt >= MIN_STAKE_DURATION, "Building not staked for minimum duration");
         address villeOwner = msg.sender;
@@ -299,7 +295,7 @@ contract ShibaVille {
 
     function claim(uint256 buildingId, uint256 villeId, uint256 x, uint256 y) external {
         require(VilleContract.ownerOf(villeId) == msg.sender, "You do not own the ville");
-        Land storage LandInfo = villes[villeId].grid[x][y];
+        Land storage LandInfo = grid[villeId][x][y];
         require(LandInfo.buildingId == buildingId, "Building is not staked");
         require(block.timestamp - LandInfo.stakedAt >= MIN_STAKE_DURATION, "Building not staked for minimum claim duration");
         address villeOwner = msg.sender;
@@ -413,16 +409,6 @@ contract ShibaVille {
         return string(bLower);
     }
 
-    function initLands(uint256 size) internal pure returns (Land[16][16] memory) {
-        Land[16][16] memory lands;
-        for (uint x = 0; x < size; x++) {
-             for (uint y = 0; y < size; y++) {
-                Land memory empty = Land(x, y, 0, 0);
-                lands[x][y] = empty;
-             }
-        }
-
-        return lands;
-    }
+    
 
 }

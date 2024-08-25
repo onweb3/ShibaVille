@@ -6,8 +6,8 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 contract SVGold is ERC20 {
     address public shibavilleContract;
 
-    constructor() ERC20("ShibaVille Gold", "SVG") {
-        shibavilleContract = msg.sender;
+    constructor(address _shibaville) ERC20("ShibaVille Gold", "SVG") {
+        shibavilleContract = _shibaville;
     }
 
     modifier onlyMainContract() {

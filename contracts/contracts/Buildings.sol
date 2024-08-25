@@ -11,8 +11,8 @@ contract Buildings is ERC721URIStorage {
     address public shibavilleContract;
     string private _baseTokenURI;
 
-    constructor(string memory baseTokenURI) ERC721("Buildings", "BLDG") {
-        shibavilleContract = msg.sender;
+    constructor(address _shibaville, string memory baseTokenURI) ERC721("Buildings", "BLDG") {
+        shibavilleContract = _shibaville;
         _baseTokenURI = baseTokenURI;
     }
 

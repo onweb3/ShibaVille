@@ -5,22 +5,21 @@ interface IResources {
     function safeBatchTransferFrom(
         address from,
         address to,
-        uint256[] calldata ids,
-        uint256[] calldata amounts,
-        bytes calldata data
+        uint256[] memory ids,
+        uint256[] memory amounts
     ) external;
 
     function burnBatch(
         address account,
-        uint256[] calldata ids,
-        uint256[] calldata amounts
+        uint256[] memory ids,
+        uint256[] memory amounts
     ) external;
 }
 
 interface IShibaville {
     function occupyVille(uint256 villeId) external;
     function liberateVille(uint256 villeId) external;
-    function burnTroops(uint256[] calldata troopIds, uint256[] calldata troopAmounts, address owner) external;
+    function burnTroops(uint256[] memory troopIds, uint256[] memory troopAmounts, address owner) external;
     function ownerOf(uint256 tokenId) external view returns (address);
 }
 
@@ -52,8 +51,8 @@ contract War {
     mapping(uint256 => Troop[]) public villeTroops; // Keeps track of troops in each ville
     mapping(uint256 => Battle) public ongoingBattles; // Keeps track of ongoing battles by defender ville ID
 
-    constructor(address _resourcesContract) {
-        shibavilleContract = msg.sender;
+    constructor(address _shibaville, address _resourcesContract) {
+        shibavilleContract = _shibaville;
         resourcesContract = IResources(_resourcesContract);
     }
 
@@ -70,7 +69,7 @@ contract War {
         uint256[] memory troopIds,
         uint256[] memory troopAmounts
     ) internal {
-        resourcesContract.safeBatchTransferFrom(owner, address(this), troopIds, troopAmounts, "");
+        resourcesContract.safeBatchTransferFrom(owner, address(this), troopIds, troopAmounts);
     }
 
     function initiateBattle(

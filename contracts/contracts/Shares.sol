@@ -11,8 +11,8 @@ contract Shares is ERC1155 {
     mapping(uint256 => address[]) private tokenHolders;
     mapping(uint256 => mapping(address => bool)) private holderExists;
     
-    constructor(string memory uri) ERC1155(uri) {
-        shibavilleContract = msg.sender;
+    constructor(address _shibaville, string memory uri) ERC1155(uri) {
+        shibavilleContract = _shibaville;
     }
 
     modifier onlyShibavilleContract() {

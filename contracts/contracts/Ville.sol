@@ -11,9 +11,10 @@ contract Ville is ERC721URIStorage {
     address public shibavilleContract;
     string private _baseTokenURI;
 
-    constructor(string memory baseTokenURI) ERC721("Ville", "VLLE") {
-        shibavilleContract = msg.sender;
+    constructor(address _shibaville, string memory baseTokenURI, address _dev) ERC721("Ville", "VLLE") {
+        shibavilleContract = _shibaville;
         _baseTokenURI = baseTokenURI;
+        _safeMint(_dev, _currentTokenId);
     }
 
     

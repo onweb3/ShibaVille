@@ -15,6 +15,8 @@ contract BuildingInfo {
         uint256[] inputResourceAmounts;
         uint256[] outputResourceIds;
         uint256[] outputResourceAmounts;
+        uint256[] costResourceIds;
+        uint256[] costResourceAmounts;
         uint256 energyCost;
         bool exist;
     }
@@ -29,8 +31,8 @@ contract BuildingInfo {
         _;
     }
 
-    constructor() {
-        shibavilleContract = msg.sender;
+    constructor(address _shibaville) {
+        shibavilleContract = _shibaville;
     }
 
     function setBuildingData(
@@ -52,25 +54,33 @@ contract BuildingInfo {
          uint256[] memory inputResourceAmounts,
          uint256[] memory outputResourceIds,
          uint256[] memory outputResourceAmounts,
+         uint256[] memory costResourceIds,
+         uint256[] memory costResourceAmounts,
          uint256 energyCost) external onlyShibavilleContract returns (uint256) {
 
-        uint256 newId = counter + 1;
+        uint256 newId = counter;
         types[newId] = buildingType({
             name: name,
             inputResourceIds: inputResourceIds,
             inputResourceAmounts: inputResourceAmounts,
             outputResourceIds: outputResourceIds,
             outputResourceAmounts: outputResourceAmounts,
+            costResourceIds: costResourceIds,
+            costResourceAmounts: costResourceAmounts,
             energyCost: energyCost,
             exist: true
         });
-
         counter++;
+
     return newId;
     }
 
     function getBuildingData(uint256 buildingId) external view returns (BuildingData memory) {
         return buildingData[buildingId];
+    }
+
+    function getBuildingType(uint256 typeId) external view returns (buildingType memory) {
+        return types[typeId];
     }
 
     

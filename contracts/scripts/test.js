@@ -79,7 +79,7 @@ describe("ShibaVille", function () {
       [1],
       [5],
       [0],
-      [15],
+      [25],
       [0, 3],
       [50, 10],
       5
@@ -100,9 +100,26 @@ describe("ShibaVille", function () {
     const position = { x: 10, y: 12 };
     await Buildings.setApprovalForAll(shibaville.target, true);
     await Resources.setApprovalForAll(shibaville.target, true);
-    await shibaville.stake(buildingId, villeId, position.x, position.x);
-    const lands = await shibaville.getLands(villeId);
-    console.log(lands[10]);
+    await shibaville.stake(buildingId, villeId, position.x, position.y);
+    let lands = await shibaville.getLands(villeId);
+    console.log("after stake", lands[10][12]);
     expect(await Buildings.ownerOf(buildingId)).to.equal(shibaville.target);
+    expect(await Resources.balanceOf(dev, 0)).to.equal(50);
+    expect(await Resources.balanceOf(dev, 1)).to.equal(95);
+    expect(await Resources.balanceOf(dev, 2)).to.equal(100);
+    expect(await Resources.balanceOf(dev, 3)).to.equal(90);
+
+    // claim reward
+    await time.increase(3600);
+    await shibaville.claim(buildingId, villeId, position.x, position.y);
+    expect(await Resources.balanceOf(dev, 0)).to.equal(75);
+    lands = await shibaville.getLands(villeId);
+    console.log("after claim", lands[10][12]);
+    // unstake
+    await time.increase(3600);
+    await shibaville.unstake(buildingId, villeId, position.x, position.y);
+    expect(await Buildings.ownerOf(buildingId)).to.equal(dev);
+    lands = await shibaville.getLands(villeId);
+    console.log("after unstake", lands[10][12]);
   });
 });

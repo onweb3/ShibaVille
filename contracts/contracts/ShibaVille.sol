@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.26;
-
+import "hardhat/console.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
 interface IVille {
@@ -272,41 +272,46 @@ contract ShibaVille is IERC721Receiver {
             referrerShare
         );
 
-        // Get the holders of shares for this tokenId
-        (address[] memory holders, uint256[] memory balances) = sharesContract
-            .getHolders(tokenId);
+        
+        if (villes[tokenId].sharesIssued) {
 
-        // note to the reader! there is a huge room for optimization but we leave it like this for now, we will change when we optimize the whole contract
-        // Calculate resource distribution
+            // Get the holders of shares for this tokenId
+            (address[] memory holders, uint256[] memory balances) = sharesContract
+                .getHolders(tokenId);
 
-        for (uint h = 0; h < holders.length; h++) {
-            uint256[] memory holderResourceAmount = new uint256[](
-                resourceIds.length
-            );
-            for (uint i = 0; i < resourceIds.length; i++) {
-                uint256 sharePercentage = (balances[h] * 100 ether) /
-                    10000 /*Total shares */;
-                holderResourceAmount[h] = ((resourceAmounts[i] / 5) *
-                    sharePercentage); // 20% for share holders
+            // note to the reader! there is a huge room for optimization but we leave it like this for now, we will change when we optimize the whole contract
+            // Calculate resource distribution
+
+            for (uint h = 0; h < holders.length; h++) {
+                uint256[] memory holderResourceAmount = new uint256[](
+                    resourceIds.length
+                );
+                for (uint i = 0; i < resourceIds.length; i++) {
+                    uint256 sharePercentage = (balances[h] * 100 ether) /
+                        10000 /*Total shares */;
+                    holderResourceAmount[h] = ((resourceAmounts[i] / 5) *
+                        sharePercentage); // 20% for share holders
+                }
+                // Mint resources to the holder
+                resourcesContract.mintBatch(
+                    holders[h],
+                    resourceIds,
+                    holderResourceAmount
+                );
             }
-            // Mint resources to the holder
-            resourcesContract.mintBatch(
-                holders[h],
-                resourceIds,
-                holderResourceAmount
-            );
-        }
 
-        // Remove 20% of the share holders
-        for (uint i = 0; i < resourceIds.length; i++) {
-            resourceAmounts[i] -= resourceAmounts[i] / 5;
+            // Remove 20% of the share holders
+            for (uint i = 0; i < resourceIds.length; i++) {
+                resourceAmounts[i] -= resourceAmounts[i] / 5;
+            }
         }
-        // Mint 80% to ville owner
+        // Mint the rest to ville owner
         resourcesContract.mintBatch(
             VilleContract.ownerOf(tokenId),
             resourceIds,
             resourceAmounts
         );
+        
     }
 
     function villeMint(
@@ -500,10 +505,6 @@ contract ShibaVille is IERC721Receiver {
         uint256 y
     ) external {
         require(
-            buildingsContract.ownerOf(buildingId) == msg.sender,
-            "You do not own the building"
-        );
-        require(
             VilleContract.ownerOf(villeId) == msg.sender,
             "You do not own the ville"
         );
@@ -529,7 +530,7 @@ contract ShibaVille is IERC721Receiver {
             buildingData.data.outputResourceAmounts
         );
 
-        VilleContract.safeTransferFrom(
+        buildingsContract.safeTransferFrom(
             address(this),
             villeOwner,
             LandInfo.buildingId

@@ -1,15 +1,15 @@
-**Shibaville: A Fully On-Chain Tower Defense Game**
+**Shibaville: A Fully On-Chain City building Game**
 
-Shibaville is a revolutionary on-chain game now being built on the high-performance, low-cost new Binance Chain (OPBNB) and Greenfield for 3D assets storage.
+Shibaville is a on-chain city-building strategy video game built on the new Binance Chain (OPBNB) and Greenfield.
 All game mechanics, rules, and actions are embedded in smart contracts, ensuring a transparent, fair, and accessible experience for players across multiple platforms.
 In Shibaville, players immerse themselves in building, resource management, and strategic warfare while contributing to a vibrant and dynamic in-game economy.
 
 ### Key Features
 
 - **On-Chain Gameplay**: Every aspect of gameplay is on-chain, ensuring fairness and transparency for all players.
-- **Fair-Launch**: Shibaville is a community project, No pre-minted tokens, all contracts start from zero.
+- **Fair-Launch**: Shibaville is a community project, No pre-minted tokens, No ICO, all contracts start from zero.
 - **Cross-Platform Access**: Play seamlessly from web browsers, Mobile devices, or build your own scripts.
-- **Unique Upgradable NFTs**: Each ville and building NFT can be upgraded with unique 3D visual representations.
+- **Unique Upgradable NFTs**: Each ville and building NFT are upgradedable with extra unique 3D visual representations.
 - **Open Source**: Shibaville is fully open-source under the MIT license, inviting contributions and innovation from the community.
 - **Referral System**: An incentivized referral system encourages players to grow the community, enhancing engagement and growth.
 
@@ -23,15 +23,16 @@ In Shibaville, players immerse themselves in building, resource management, and 
 2. **Ville Management**
 
    - **Ville NFT**: This NFT represents the player’s ville, including level, rank, unique name, and dynamic attributes.
-   - **Building NFTs**: Each building is represented as an NFT with unique traits that impact resource production and strategy.
+   - **Building NFTs**: Each building is represented as an NFT, it can be upgraded with unique traits that impact resource production and strategy.
    - **Placement**: Players strategically place buildings in their ville, influencing resource management and gameplay strategy.
-   - **Shares**: Manages ville shares as token that can be transfered to other wallets.
+   - **Shares**: Ville shares as token represent 20% of the ville income that can be transfered to other wallets.
 
 3. **Resource Management**
 
-   - **Multi-Token Contract**: Manages in-game resources such as wood, iron, stone, and gold.
+   - **Multi-Token Contract**: Manages in-game resources such as food, basic building materials, minerals, gases , and technology.
+   - **SVGold Contract**: ERC20 token (SVGOLD) minted and used by the player for upgrades and minting heavy war units.
    - **Resource Generation**: Buildings produce resources over time, influenced by their traits and positioning.
-   - **Minting and Burning**: Resources are minted for new buildings and burned when buildings are placed or upgraded.
+   - **Minting and Burning**: Resources are minted when buildings are staked and burned when new buildings created or upgraded.
 
 4. **Army and Warfare**
 

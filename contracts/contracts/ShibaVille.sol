@@ -66,7 +66,7 @@ interface IWar {
 }
 
 interface ISVGold {
-    
+    function mint(address to, uint256 amount) external;
 }
 
 contract ShibaVille is IERC721Receiver {
@@ -181,11 +181,12 @@ contract ShibaVille is IERC721Receiver {
         uint256[] memory amounts = new uint256[](4);
         for (uint i = 0; i < 4; i++) {
             ids[i] = i;
-            amounts[i] = 100;
+            amounts[i] = 500;
         }
 
         // Mint initial resources to the ville owner
         resourcesContract.mintBatch(msg.sender, ids, amounts);
+        goldContract.mint(msg.sender, 1000 ether);
     }
 
     function getVille(uint256 tokenId) public view returns (VilleInfo memory) {

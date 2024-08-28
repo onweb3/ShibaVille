@@ -13,7 +13,7 @@ contract Resources is ERC1155 {
         uint256[] memory amounts = new uint256[](4);
         for (uint i = 0; i < 4; i++) {
             ids[i] = i;
-            amounts[i] = 100;
+            amounts[i] = 500;
         }
         _mintBatch(_dev, ids, amounts, "");
     }

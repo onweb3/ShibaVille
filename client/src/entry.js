@@ -1,5 +1,15 @@
 import { createScene } from "./main.js";
 import { createVille } from "./ville.js";
+import { createWeb3 } from "./web3Provider.js";
+
+import {
+  shibavilleAddress,
+  buildingsAddress,
+  buildingInfoAddress,
+} from "./abi/addresses.js";
+const buildingInfoABI = require("./abi/buildingInfo.json");
+const shibavilleABI = require("./abi/shibaville.json");
+const buildingsABI = require("./abi/buildings.json");
 
 async function createGame() {
   let currentAccount;
@@ -84,7 +94,22 @@ async function createGame() {
       connectBtn.innerText = `Address: ${currentAccount}`;
     }
   }
+  const ShibaVilleContract = await createWeb3(shibavilleABI, shibavilleAddress);
+  ShibaVilleContract.methods
+    .getVille(0)
+    .call()
+    .then((value) => console.log(`The value is ${value.name}`))
+    .catch((error) => console.error(error));
 
+  const BuildingsContract = await createWeb3(
+    buildingInfoABI,
+    buildingInfoAddress
+  );
+  BuildingsContract.methods
+    .shibavilleContract()
+    .call()
+    .then((value) => console.log(`The value is ${value}`))
+    .catch((error) => console.error(error));
   const scene = createScene(window);
   const ville = createVille();
   scene.initScene(ville);

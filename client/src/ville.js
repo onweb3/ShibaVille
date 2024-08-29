@@ -29,19 +29,7 @@ export function createVille() {
       y,
       terrainId: "land-empty",
       buildingId: undefined,
-      update() {
-        const rand = Math.random();
-        if (rand < 0.01) {
-          if (this.buildingId === undefined) {
-            this.buildingId = "buildingId-lvl1";
-          } else if (this.buildingId === "buildingId-lvl1") {
-            this.buildingId = "buildingId-lvl2";
-          } else if (this.buildingId === "buildingId-lvl2") {
-            this.buildingId = "buildingId-lvl3";
-          }
-          //console.log(this.buildingId);
-        }
-      },
+      update() {},
     };
   }
 

@@ -10,3 +10,7 @@
 
 * [Business Model](about-the-project/publish-your-docs.md)
 * [Roadmap](about-the-project/editor.md)
+
+## About the game
+
+* [Introduction](about-the-game/introduction.md)
